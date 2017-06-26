@@ -1,7 +1,8 @@
-package com.mnishiguchi.criminalrecorder
+package com.mnishiguchi.criminalrecorder.ui
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.mnishiguchi.criminalrecorder.R
 
 class MainActivity : AppCompatActivity() {
 
