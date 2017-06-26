@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_crime.*
  */
 class CrimeFragment : Fragment() {
     private val TAG: String = javaClass.simpleName
+    private val crime = Crime()
 
     companion object {
         /**
@@ -29,15 +30,13 @@ class CrimeFragment : Fragment() {
         }
     }
 
-    private val crime: Crime by lazy { Crime() }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View? {
         // Inflate the layout for this fragment
-        return inflater?.inflate(R.layout.fragment_crime, container, false)
+        return inflater.inflate(R.layout.fragment_crime, container, false)
     }
 
     // https://developer.android.com/reference/android/app/Fragment.html#onViewCreated(android.view.View, android.os.Bundle)
