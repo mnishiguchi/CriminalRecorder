@@ -3,7 +3,6 @@ package com.mnishiguchi.criminalrecorder.ui;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 
 import com.mnishiguchi.criminalrecorder.R;
 
@@ -21,18 +20,18 @@ abstract class SingleFragmentActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_single_fragment)
 
         // Use supportFragmentManager because we are using the support library fragments.
         // Check if the fragment is already in the fragment manager's list.
-        var fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+        var fragment = supportFragmentManager.findFragmentById(R.id.singleFragmentContainer)
 
         // If it was not found, we create one and add to the fragment manager
         if (fragment == null) {
             // Instantiate the fragment that the activity is hosting.
             fragment = createFragment()
             supportFragmentManager.beginTransaction()
-                    .add(R.id.fragmentContainer, fragment)
+                    .add(R.id.singleFragmentContainer, fragment)
                     .commit()
         }
 

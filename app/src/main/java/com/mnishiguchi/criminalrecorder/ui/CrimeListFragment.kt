@@ -7,12 +7,12 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.inflate
 import kotlinx.android.synthetic.main.fragment_crime_list.*
+import kotlinx.android.synthetic.main.list_item_crime.view.*
 
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
@@ -46,6 +46,7 @@ class CrimeListFragment : Fragment() {
 
         // LayoutManager handles the positioning of items and defines the scrolling behavior.
         crimeList.layoutManager = LinearLayoutManager(activity)
+
         updateUI()
     }
 
@@ -57,7 +58,7 @@ class CrimeListFragment : Fragment() {
     private class CrimeListAdapter(val crimes: List<Crime>) : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = parent.inflate(android.R.layout.simple_list_item_1)
+            val view = parent.inflate(R.layout.list_item_crime)
             return ViewHolder(view)
         }
 
@@ -71,12 +72,12 @@ class CrimeListFragment : Fragment() {
 
         // https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-            // NOTE: android.R.layout.simple_list_item_1 has a single TextView.
-            val crimeText = itemView as TextView
-
             fun bindCrime(crime: Crime) {
-                crimeText.text = crime.title
+                with(itemView) {
+                    listItemCrimeTitle.text = crime.title
+                    listItemCrimeDate.text = crime.date.toString()
+                    listItemCrimeIsSolved.isChecked = crime.isSolved
+                }
             }
         }
     }
