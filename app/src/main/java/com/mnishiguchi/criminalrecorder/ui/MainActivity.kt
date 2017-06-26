@@ -1,13 +1,14 @@
 package com.mnishiguchi.criminalrecorder.ui
 
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import com.mnishiguchi.criminalrecorder.R
+import android.support.v4.app.Fragment
 
-class MainActivity : AppCompatActivity() {
+/**
+ * Inherit FragmentActivity because we use support fragments.
+ */
+class MainActivity : SingleFragmentActivity() {
+    private val TAG: String = javaClass.simpleName
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    override fun createFragment(): Fragment {
+        return CrimeFragment.newInstance()
     }
 }
