@@ -13,6 +13,7 @@ import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.inflate
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
+import org.jetbrains.anko.toast
 
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
@@ -52,14 +53,18 @@ class CrimeListFragment : Fragment() {
 
     private fun updateUI() {
         val crimes = CrimeLab.get(activity).crimes
-        crimeList.adapter = CrimeListAdapter(crimes)
+        crimeList.adapter = CrimeListAdapter(crimes) {
+            // on-click callback
+            activity.toast(it.id.toString())
+        }
     }
 
-    private class CrimeListAdapter(val crimes: List<Crime>) : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
+    private class CrimeListAdapter(val crimes: List<Crime>, val itemClick: (crime: Crime) -> Unit)
+        : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = parent.inflate(R.layout.list_item_crime)
-            return ViewHolder(view)
+            return ViewHolder(view, itemClick)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -71,12 +76,15 @@ class CrimeListFragment : Fragment() {
         }
 
         // https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
-        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        class ViewHolder(view: View, val itemClick: (crime: Crime) -> Unit)
+            : RecyclerView.ViewHolder(view) {
+
             fun bindCrime(crime: Crime) {
                 with(itemView) {
                     listItemCrimeTitle.text = crime.title
                     listItemCrimeDate.text = crime.date.toString()
                     listItemCrimeIsSolved.isChecked = crime.isSolved
+                    setOnClickListener { itemClick(crime) }
                 }
             }
         }
