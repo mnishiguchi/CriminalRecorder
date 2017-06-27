@@ -13,7 +13,6 @@ import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.inflate
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
-import org.jetbrains.anko.toast
 
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
@@ -22,11 +21,7 @@ class CrimeListFragment : Fragment() {
     private val TAG: String = javaClass.simpleName
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         * @return A new instance of fragment CrimeListFragment.
-         */
+        // Define how a hosting activity should create this fragment.
         fun newInstance(): CrimeListFragment {
             val fragment = CrimeListFragment()
             return fragment
@@ -51,11 +46,23 @@ class CrimeListFragment : Fragment() {
         updateUI()
     }
 
+    // In general, onResume is the safest place to take actions to update a fragment view.
+    override fun onResume() {
+        super.onResume()
+        updateUI()
+    }
+
     private fun updateUI() {
         val crimes = CrimeLab.get(activity).crimes
-        crimeList.adapter = CrimeListAdapter(crimes) {
-            // on-click callback
-            activity.toast(it.id.toString())
+
+        if (crimeList.adapter == null) {
+            crimeList.adapter = CrimeListAdapter(crimes) {
+                // on-click callback
+                CrimeActivity.start(activity, it.id)
+            }
+        } else {
+            // Reload the list.
+            crimeList.adapter.notifyDataSetChanged()
         }
     }
 
@@ -71,21 +78,21 @@ class CrimeListFragment : Fragment() {
             holder.bindCrime(crimes[position])
         }
 
-        override fun getItemCount(): Int {
-            return crimes.size
-        }
+        override fun getItemCount(): Int = crimes.size
 
         // https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
         class ViewHolder(view: View, val itemClick: (crime: Crime) -> Unit)
             : RecyclerView.ViewHolder(view) {
 
-            fun bindCrime(crime: Crime) {
-                with(itemView) {
-                    listItemCrimeTitle.text = crime.title
-                    listItemCrimeDate.text = crime.date.toString()
-                    listItemCrimeIsSolved.isChecked = crime.isSolved
-                    setOnClickListener { itemClick(crime) }
+            fun bindCrime(crime: Crime) = with(itemView) {
+                listItemCrimeTitle.text = crime.title
+                listItemCrimeDate.text = crime.date.toString()
+                listItemCrimeIsSolved.isChecked = crime.isSolved
+                listItemCrimeIsSolved.setOnCheckedChangeListener {
+                    _, isChecked ->
+                    crime.isSolved = isChecked
                 }
+                setOnClickListener { itemClick(crime) }
             }
         }
     }

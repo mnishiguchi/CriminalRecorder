@@ -28,12 +28,5 @@ class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
         }
     }
 
-    fun crime(id: UUID) : Crime? {
-        crimes.forEach {
-            if (it.id == id) {
-                return it
-            }
-        }
-        return null
-    }
+    fun crime(id: UUID) : Crime? = crimes.find { it.id == id }
 }
