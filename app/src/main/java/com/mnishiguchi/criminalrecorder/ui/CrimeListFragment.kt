@@ -1,9 +1,11 @@
 package com.mnishiguchi.criminalrecorder.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,12 +15,14 @@ import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.inflate
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
+import org.jetbrains.anko.toast
 
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
  */
 class CrimeListFragment : Fragment() {
-    private val TAG: String = javaClass.simpleName
+    private val TAG = javaClass.simpleName
+    private val REQUEST_CRIME = 1
 
     companion object {
         // Define how a hosting activity should create this fragment.
@@ -32,12 +36,16 @@ class CrimeListFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) : View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        Log.d(TAG, "onCreateView")
+
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_crime_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d(TAG, "onViewCreated")
+
         super.onViewCreated(view, savedInstanceState)
 
         // LayoutManager handles the positioning of items and defines the scrolling behavior.
@@ -46,8 +54,24 @@ class CrimeListFragment : Fragment() {
         updateUI()
     }
 
+    // Called before onResume if a child activity set results.
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        Log.d(TAG, "onActivityResult")
+
+        super.onActivityResult(requestCode, resultCode, data)
+
+        when (requestCode) {
+            REQUEST_CRIME -> {
+                val crimeId = CrimeFragment.crimeIdResult(data)
+                activity.toast("crime id: $crimeId")
+            }
+        }
+    }
+
     // In general, onResume is the safest place to take actions to update a fragment view.
     override fun onResume() {
+        Log.d(TAG, "onResume")
+
         super.onResume()
         updateUI()
     }
@@ -58,7 +82,8 @@ class CrimeListFragment : Fragment() {
         if (crimeList.adapter == null) {
             crimeList.adapter = CrimeListAdapter(crimes) {
                 // on-click callback
-                CrimeActivity.start(activity, it.id)
+                val intent = CrimeActivity.newIntent(context, it.id)
+                startActivityForResult(intent, REQUEST_CRIME)
             }
         } else {
             // Reload the list.
