@@ -23,6 +23,7 @@ import org.jetbrains.anko.toast
 class CrimeListFragment : Fragment() {
     private val TAG = javaClass.simpleName
     private val REQUEST_CRIME = 1
+    private var clickedPosition = -1
 
     companion object {
         // Define how a hosting activity should create this fragment.
@@ -82,16 +83,27 @@ class CrimeListFragment : Fragment() {
         if (crimeList.adapter == null) {
             crimeList.adapter = CrimeListAdapter(crimes) {
                 // on-click callback
-                val intent = CrimeActivity.newIntent(context, it.id)
+                (id), position ->
+                val intent = CrimeActivity.newIntent(context, id)
                 startActivityForResult(intent, REQUEST_CRIME)
+
+                // Remember the position so that we can update that item later.
+                clickedPosition = position
             }
         } else {
+            Log.d(TAG, "clickedPosition: $clickedPosition")
+
             // Reload the list.
-            crimeList.adapter.notifyDataSetChanged()
+            when (clickedPosition) {
+                -1 -> crimeList.adapter.notifyDataSetChanged()
+                else -> crimeList.adapter.notifyItemChanged(clickedPosition)
+            }
+
+
         }
     }
 
-    private class CrimeListAdapter(val crimes: List<Crime>, val itemClick: (crime: Crime) -> Unit)
+    private class CrimeListAdapter(val crimes: List<Crime>, val itemClick: (crime: Crime, position: Int) -> Unit)
         : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -100,16 +112,16 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bindCrime(crimes[position])
+            holder.bindCrime(crimes[position], position)
         }
 
         override fun getItemCount(): Int = crimes.size
 
         // https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
-        class ViewHolder(view: View, val itemClick: (crime: Crime) -> Unit)
+        class ViewHolder(view: View, val itemClick: (crime: Crime, position: Int) -> Unit)
             : RecyclerView.ViewHolder(view) {
 
-            fun bindCrime(crime: Crime) = with(itemView) {
+            fun bindCrime(crime: Crime, position: Int) = with(itemView) {
                 listItemCrimeTitle.text = crime.title
                 listItemCrimeDate.text = crime.date.toString()
                 listItemCrimeIsSolved.isChecked = crime.isSolved
@@ -117,7 +129,7 @@ class CrimeListFragment : Fragment() {
                     _, isChecked ->
                     crime.isSolved = isChecked
                 }
-                setOnClickListener { itemClick(crime) }
+                setOnClickListener { itemClick(crime, position) }
             }
         }
     }
