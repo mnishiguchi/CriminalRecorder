@@ -1,5 +1,6 @@
 package com.mnishiguchi.criminalrecorder.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -45,8 +46,6 @@ class CrimeListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d(TAG, "onViewCreated")
-
         super.onViewCreated(view, savedInstanceState)
 
         // LayoutManager handles the positioning of items and defines the scrolling behavior.
@@ -58,8 +57,9 @@ class CrimeListFragment : Fragment() {
     // Called before onResume if a child activity set results.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         Log.d(TAG, "onActivityResult")
-
         super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode != Activity.RESULT_OK) return
 
         when (requestCode) {
             REQUEST_CRIME -> {
@@ -72,8 +72,8 @@ class CrimeListFragment : Fragment() {
     // In general, onResume is the safest place to take actions to update a fragment view.
     override fun onResume() {
         Log.d(TAG, "onResume")
-
         super.onResume()
+
         updateUI()
     }
 
@@ -84,22 +84,17 @@ class CrimeListFragment : Fragment() {
             crimeList.adapter = CrimeListAdapter(crimes) {
                 // on-click callback
                 (id), position ->
-                val intent = CrimeActivity.newIntent(context, id)
+                val intent = CrimePagerActivity.newIntent(activity, id)
                 startActivityForResult(intent, REQUEST_CRIME)
 
-                // Remember the position so that we can update that item later.
+                // Remember the position for later use.
                 clickedPosition = position
             }
         } else {
-            Log.d(TAG, "clickedPosition: $clickedPosition")
-
             // Reload the list.
-            when (clickedPosition) {
-                -1 -> crimeList.adapter.notifyDataSetChanged()
-                else -> crimeList.adapter.notifyItemChanged(clickedPosition)
-            }
-
-
+            // FIXME - Update data more efficiently
+            // - Maybe we can Uuse notifyItemChanged(Int) or google's new architecture components.
+            crimeList.adapter.notifyDataSetChanged()
         }
     }
 

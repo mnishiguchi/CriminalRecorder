@@ -36,15 +36,17 @@ class CrimeFragment : Fragment() {
             return fragment
         }
 
-        // Define how the previous activity should get result in its onActivityResult.
+        // Define how the previous activity should get result.
         fun crimeIdResult(data: Intent): UUID {
             return data.getSerializableExtra(EXTRA_CRIME_ID) as UUID
         }
     }
 
     // Tell the hosting activity to set result values because only activity can have results.
-    private fun setResult(crimeId: UUID) = with(activity) {
-        setResult(Activity.RESULT_OK, intentFor<CrimeFragment>(EXTRA_CRIME_ID to crimeId))
+    private fun setResult(crimeId: UUID) {
+        with(activity) {
+            setResult(Activity.RESULT_OK, intentFor<CrimeFragment>(EXTRA_CRIME_ID to crimeId))
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,14 +68,13 @@ class CrimeFragment : Fragment() {
     // https://developer.android.com/reference/android/app/Fragment.html#onViewCreated(android.view.View, android.os.Bundle)
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         Log.d(TAG, "onViewCreated")
-
         super.onViewCreated(view, savedInstanceState)
 
         crimeTitle.setText(crime.title)
         crimeTitle.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                crimeTitle.setText(s)
+                crime.title = s.toString()
             }
 
             override fun afterTextChanged(s: Editable?) {}
@@ -88,5 +89,15 @@ class CrimeFragment : Fragment() {
             _, isChecked ->
             crime.isSolved = isChecked
         }
+    }
+
+    override fun onResume() {
+        Log.d(TAG, "onResume - currentCrimeId: ${crime.id}")
+        super.onResume()
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "onPause")
+        super.onPause()
     }
 }

@@ -16,7 +16,7 @@ abstract class SingleFragmentActivity : FragmentActivity() {
      * Subclasses of [SingleFragmentActivity] must implement this method.
      * @return An instance of the fragment that the activity is hosting.
      */
-    abstract fun createFragment() : Fragment
+    abstract fun createFragment(): Fragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
