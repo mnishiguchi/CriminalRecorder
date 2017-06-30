@@ -11,4 +11,6 @@ I do this exercise using Kotlin instead of Java.
 - [Android Studio](https://gist.github.com/mnishiguchi/58776be507b704653c16aa099604f08c)
 - [Fragment](https://gist.github.com/mnishiguchi/5e4bb10a06ca6cefe18b6e0f139f72c6)
 - [Formatting date](https://gist.github.com/mnishiguchi/b6680ce6055813071a203b131011eac6)
+- [RecyclerView](https://gist.github.com/mnishiguchi/42dfacc7e5abf048a80118d6521d7177)
+- [ViewPager](https://gist.github.com/mnishiguchi/a425e5d6d6d7b5a4fb2e769a0a416530)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)

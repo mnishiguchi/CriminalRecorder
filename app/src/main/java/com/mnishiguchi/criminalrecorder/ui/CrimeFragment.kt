@@ -28,12 +28,13 @@ class CrimeFragment : Fragment() {
     companion object {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
         private val EXTRA_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.EXTRA_CRIME_ID"
+        private val DIALOG_DATE = "DIALOG_DATE"
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(crimeId: UUID): CrimeFragment {
-            val fragment = CrimeFragment()
-            fragment.arguments = bundleOf(ARG_CRIME_ID to crimeId)
-            return fragment
+            return CrimeFragment().apply {
+                arguments = bundleOf(ARG_CRIME_ID to crimeId)
+            }
         }
 
         // Define how the previous activity should get result.
@@ -82,7 +83,9 @@ class CrimeFragment : Fragment() {
 
         val df = android.text.format.DateFormat.getLongDateFormat(this.context)
         crimeDate.text = df.format(crime.date)
-        crimeDate.isEnabled = false
+        crimeDate.setOnClickListener {
+            DatePickerFragment().show(activity.supportFragmentManager, DIALOG_DATE)
+        }
 
         crimeSolved.isChecked = crime.isSolved
         crimeSolved.setOnCheckedChangeListener {

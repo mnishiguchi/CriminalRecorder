@@ -29,8 +29,7 @@ class CrimeListFragment : Fragment() {
     companion object {
         // Define how a hosting activity should create this fragment.
         fun newInstance(): CrimeListFragment {
-            val fragment = CrimeListFragment()
-            return fragment
+            return CrimeListFragment()
         }
     }
 
