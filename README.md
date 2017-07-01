@@ -16,4 +16,5 @@ I do this exercise using Kotlin instead of Java.
 - [AlertDialog](https://gist.github.com/mnishiguchi/c12bc4520bc06918d37b64579b779975)
 - [Toolbar](https://gist.github.com/mnishiguchi/a117cc7554638f741f3b175d25a4654c)
 - [Icons](https://gist.github.com/mnishiguchi/fa72ca4515d41c43c0245c079a756ad1)
+- [Up button](https://gist.github.com/mnishiguchi/c93c73ad14093747b02351bd4f7562c5)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)
