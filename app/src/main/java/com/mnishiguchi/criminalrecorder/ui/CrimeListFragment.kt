@@ -27,6 +27,7 @@ class CrimeListFragment : Fragment() {
 
     lateinit private var dateFormat: java.text.DateFormat
     private var clickedPosition = -1
+    private var isSubtitleVisible = false
 
     companion object {
         private val REQUEST_CRIME = 1
@@ -90,6 +91,13 @@ class CrimeListFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.fragment_crime_list, menu)
+
+        // Switch the "toggle subtitle" menu item.
+        val menuItem = menu.findItem(R.id.menu_item_toggle_subtitle) as MenuItem
+        when (isSubtitleVisible) {
+            true -> menuItem.setTitle(R.string.hide_subtitle)
+            else -> menuItem.setTitle(R.string.show_subtitle)
+        }
     }
 
     // Called when the user clicks on a menu item.
@@ -101,7 +109,12 @@ class CrimeListFragment : Fragment() {
                 return true // Indicate that no further processing is necessary.
             }
 
-            R.id.menu_item_show_subtitle -> {
+            R.id.menu_item_toggle_subtitle -> {
+                isSubtitleVisible = !isSubtitleVisible
+
+                // Redraw the options menu because we want to toggle show/hide subtitle menu item.
+                activity.invalidateOptionsMenu()
+
                 updateSubtitle()
                 return true // Indicate that no further processing is necessary.
             }
@@ -110,19 +123,21 @@ class CrimeListFragment : Fragment() {
         }
     }
 
+    // Create a blank crime and open an editor (CrimeFragment).
     private fun startBlankCrime() {
         val newCrime = CrimeLab.get(activity).newCrime()
         val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
         startActivity(intent)
     }
 
+    // Update subtitle based on its visibility status and current crime counts.
     private fun updateSubtitle() {
-        val crimeCount = CrimeLab.get(activity).crimes.size
-
-        // https://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
-        val subtitle = getString(R.string.subtitle_format, crimeCount)
-
-        (activity as AppCompatActivity).supportActionBar?.subtitle = subtitle
+        // Toggle the subtitle.
+        (activity as AppCompatActivity).supportActionBar?.subtitle =
+                if (isSubtitleVisible) {
+                    val crimeCount = CrimeLab.get(activity).crimes.size
+                    getString(R.string.subtitle_format, crimeCount)
+                } else null
     }
 
     private fun updateUI() {
@@ -144,6 +159,8 @@ class CrimeListFragment : Fragment() {
             // - Maybe we can use notifyItemChanged(Int) or google's new architecture components.
             crimeList.adapter.notifyDataSetChanged()
         }
+
+        updateSubtitle()
     }
 
     /**
