@@ -84,7 +84,8 @@ class CrimeFragment : Fragment() {
         val df = android.text.format.DateFormat.getLongDateFormat(this.context)
         crimeDate.text = df.format(crime.date)
         crimeDate.setOnClickListener {
-            DatePickerFragment().show(activity.supportFragmentManager, DIALOG_DATE)
+            DatePickerFragment.newInstance(crime.date)
+                    .show(activity.supportFragmentManager, DIALOG_DATE)
         }
 
         crimeSolved.isChecked = crime.isSolved
