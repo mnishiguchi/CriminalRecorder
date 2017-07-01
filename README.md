@@ -14,4 +14,5 @@ I do this exercise using Kotlin instead of Java.
 - [RecyclerView](https://gist.github.com/mnishiguchi/42dfacc7e5abf048a80118d6521d7177)
 - [ViewPager](https://gist.github.com/mnishiguchi/a425e5d6d6d7b5a4fb2e769a0a416530)
 - [AlertDialog](https://gist.github.com/mnishiguchi/c12bc4520bc06918d37b64579b779975)
+- [Toolbar](https://gist.github.com/mnishiguchi/a117cc7554638f741f3b175d25a4654c)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)
