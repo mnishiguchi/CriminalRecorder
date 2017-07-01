@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentStatePagerAdapter
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
@@ -13,12 +13,18 @@ import kotlinx.android.synthetic.main.activity_crime_pager.*
 import java.util.*
 
 /**
- * Inherit FragmentActivity because we use support fragments.
+ * We subclass android.support.v7.app.AppCompatActivity, which is a subclass of
+ * android.support.v4.app.FragmentActivity, so that we can use:
+ *   + ViewPager
+ *   + support-library fragments
+ *   + cross-api-version toolbar
+ * https://developer.android.com/reference/android/support/v7/app/AppCompatActivity.html
+ *
  * A ViewPager is only available in the support library and requires a PagerAdapter, such as
  * FragmentStatePagerAdapter and FragmentPagerAdapter.
  * https://developer.android.com/reference/android/support/v4/view/ViewPager.html
  */
-class CrimePagerActivity : FragmentActivity() {
+class CrimePagerActivity : AppCompatActivity() {
     private val TAG = javaClass.simpleName
 
     companion object {
