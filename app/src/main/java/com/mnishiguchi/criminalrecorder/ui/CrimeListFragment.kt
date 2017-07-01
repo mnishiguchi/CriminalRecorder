@@ -93,7 +93,7 @@ class CrimeListFragment : Fragment() {
         inflater.inflate(R.menu.fragment_crime_list, menu)
 
         // Switch the "toggle subtitle" menu item.
-        val menuItem = menu.findItem(R.id.menu_item_toggle_subtitle) as MenuItem
+        val menuItem: MenuItem = menu.findItem(R.id.menu_item_toggle_subtitle)
         when (isSubtitleVisible) {
             true -> menuItem.setTitle(R.string.hide_subtitle)
             else -> menuItem.setTitle(R.string.show_subtitle)
@@ -102,13 +102,11 @@ class CrimeListFragment : Fragment() {
 
     // Called when the user clicks on a menu item.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
         when (item.itemId) {
             R.id.menu_item_new_crime -> {
                 startBlankCrime()
                 return true // Indicate that no further processing is necessary.
             }
-
             R.id.menu_item_toggle_subtitle -> {
                 isSubtitleVisible = !isSubtitleVisible
 
@@ -118,7 +116,6 @@ class CrimeListFragment : Fragment() {
                 updateSubtitle()
                 return true // Indicate that no further processing is necessary.
             }
-
             else -> return super.onOptionsItemSelected(item)
         }
     }

@@ -2,6 +2,7 @@ package com.mnishiguchi.criminalrecorder.ui;
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
 import android.support.v7.app.AppCompatActivity
 import com.mnishiguchi.criminalrecorder.R
 
@@ -26,16 +27,26 @@ abstract class SingleFragmentActivity : AppCompatActivity() {
         setContentView(R.layout.activity_single_fragment)
 
         // Use supportFragmentManager because we are using the support library fragments.
-        with(supportFragmentManager) {
-            // Find a fragment in the fragment manager's list or create a new instance.
-            val fragment = findFragmentById(R.id.singleFragmentContainer) ?: createFragment()
-            beginTransaction()
-                    .add(R.id.singleFragmentContainer, fragment)
-                    .commit()
-        }
+        val fm = supportFragmentManager
 
-        // A container view ID serves two purposes:
-        // 1. Tells the FragmentManager where in the activity's view the fragment's view should appear.
-        // 2. Used as a unique identifier for a fragment in the FragmentManager's list.
+        // Register a fragment to the fragment manager if not already.
+        // NOTE: Never add the same fragment twice!
+        if (findFragment(fm) == null) registerFragment(fm)
+    }
+
+    // A container view ID serves two purposes:
+    // 1. Tells the FragmentManager where in the activity's view the fragment's view should appear.
+    // 2. Used as a unique identifier for a fragment in the FragmentManager's list.
+
+    // Find a fragment instance in a fragment manager's list.
+    private fun findFragment(fm: FragmentManager): Fragment? {
+        return fm.findFragmentById(R.id.singleFragmentContainer)
+    }
+
+    // Create a new fragment instance and register it to a fragment manager.
+    private fun registerFragment(fm: FragmentManager) {
+        fm.beginTransaction()
+                .add(R.id.singleFragmentContainer, createFragment())
+                .commit()
     }
 }
