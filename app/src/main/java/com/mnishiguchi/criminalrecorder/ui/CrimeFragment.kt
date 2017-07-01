@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
+import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
 import org.jetbrains.anko.bundleOf
 import org.jetbrains.anko.intentFor
@@ -23,12 +25,16 @@ import java.util.*
  */
 class CrimeFragment : Fragment() {
     private val TAG = javaClass.simpleName
+
     lateinit private var crime: Crime
+    lateinit private var df: java.text.DateFormat
+    private val fm: FragmentManager by lazy { activity.supportFragmentManager }
 
     companion object {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
         private val EXTRA_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.EXTRA_CRIME_ID"
         private val DIALOG_DATE = "DIALOG_DATE"
+        private val REQUEST_DATE = 0
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(crimeId: UUID): CrimeFragment {
@@ -53,8 +59,12 @@ class CrimeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Find a crime in CrimeLab and store the ref.
         val crimeId = arguments.getSerializable(ARG_CRIME_ID) as UUID
         crime = CrimeLab.get(activity).crime(crimeId) ?: throw Exception("Could not find a crime with the specified uuid.")
+
+        // Create a DateFormat instance.
+        df = this.context.mediumDateFormat()
 
         setResult(crimeId)
     }
@@ -81,18 +91,45 @@ class CrimeFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        val df = android.text.format.DateFormat.getLongDateFormat(this.context)
-        crimeDate.text = df.format(crime.date)
         crimeDate.setOnClickListener {
-            DatePickerFragment.newInstance(crime.date)
-                    .show(activity.supportFragmentManager, DIALOG_DATE)
+            val dialog = DatePickerFragment.newInstance(crime.date)
+            dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
+            dialog.show(fm, DIALOG_DATE)
         }
+        updateDateText()
 
         crimeSolved.isChecked = crime.isSolved
         crimeSolved.setOnCheckedChangeListener {
             _, isChecked ->
             crime.isSolved = isChecked
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.d(TAG, "onActivityResult")
+
+        if (resultCode != Activity.RESULT_OK) {
+            Log.d(TAG, "Result was not OK")
+            return
+        }
+
+        when (requestCode) {
+            REQUEST_DATE -> {
+                data?.let {
+                    // Update the crime date to CrimeLab.
+                    crime.date = DatePickerFragment.dateResult(data)
+
+                    updateDateText()
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the date text based on a crime stored in the CrimeLab.
+     */
+    private fun updateDateText() {
+        crimeDate.text = df.format(crime.date)
     }
 
     override fun onResume() {

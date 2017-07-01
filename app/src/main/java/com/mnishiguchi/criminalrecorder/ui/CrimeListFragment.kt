@@ -14,6 +14,7 @@ import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.inflate
+import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
 import org.jetbrains.anko.toast
@@ -24,6 +25,8 @@ import org.jetbrains.anko.toast
 class CrimeListFragment : Fragment() {
     private val TAG = javaClass.simpleName
     private val REQUEST_CRIME = 1
+
+    lateinit private var dateFormat: java.text.DateFormat
     private var clickedPosition = -1
 
     companion object {
@@ -35,6 +38,9 @@ class CrimeListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Create a DateFormat instance.
+        dateFormat = this.context.mediumDateFormat()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -80,7 +86,7 @@ class CrimeListFragment : Fragment() {
         val crimes = CrimeLab.get(activity).crimes
 
         if (crimeList.adapter == null) {
-            crimeList.adapter = CrimeListAdapter(crimes) {
+            crimeList.adapter = CrimeListAdapter(crimes, dateFormat) {
                 // on-click callback
                 (id), position ->
                 val intent = CrimePagerActivity.newIntent(activity, id)
@@ -97,12 +103,17 @@ class CrimeListFragment : Fragment() {
         }
     }
 
-    private class CrimeListAdapter(val crimes: List<Crime>, val itemClick: (crime: Crime, position: Int) -> Unit)
+    /**
+     * An adapter for CrimeListFragment.
+     */
+    private class CrimeListAdapter(val crimes: List<Crime>,
+                                   val dateFormat: java.text.DateFormat,
+                                   val itemClick: (crime: Crime, position: Int) -> Unit)
         : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = parent.inflate(R.layout.list_item_crime)
-            return ViewHolder(view, itemClick)
+            return ViewHolder(view, dateFormat, itemClick)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -111,13 +122,18 @@ class CrimeListFragment : Fragment() {
 
         override fun getItemCount(): Int = crimes.size
 
-        // https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
-        class ViewHolder(view: View, val itemClick: (crime: Crime, position: Int) -> Unit)
+        /**
+         * A view holder for CrimeListAdapter.
+         * https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
+         */
+        class ViewHolder(view: View,
+                         val dateFormat: java.text.DateFormat,
+                         val itemClick: (crime: Crime, position: Int) -> Unit)
             : RecyclerView.ViewHolder(view) {
 
             fun bindCrime(crime: Crime, position: Int) = with(itemView) {
                 listItemCrimeTitle.text = crime.title
-                listItemCrimeDate.text = crime.date.toString()
+                listItemCrimeDate.text = dateFormat.format(crime.date)
                 listItemCrimeIsSolved.isChecked = crime.isSolved
                 listItemCrimeIsSolved.setOnCheckedChangeListener {
                     _, isChecked ->
