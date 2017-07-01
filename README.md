@@ -4,7 +4,7 @@ This is an exercise from the book [Android Programming: The Big Nerd Ranch Guide
 I do this exercise using Kotlin instead of Java.
 
 ## Notes
-- [Adding an icon](https://gist.github.com/mnishiguchi/aa33071795724232c20b395a671f0eb7)
+- [Drawable suffixes](https://gist.github.com/mnishiguchi/aa33071795724232c20b395a671f0eb7)
 - [Loading local json from assets](https://gist.github.com/mnishiguchi/834b336fb20f85e79010b50b0c088cbc)
 - [Debugging Android](https://gist.github.com/mnishiguchi/4b248b8bc29f8dfc6674f4ffcb75c1ba)
 - [Saving and restoring activity state](https://gist.github.com/mnishiguchi/202cf7ebc07901a4407b8d51206fcddb)
@@ -15,4 +15,5 @@ I do this exercise using Kotlin instead of Java.
 - [ViewPager](https://gist.github.com/mnishiguchi/a425e5d6d6d7b5a4fb2e769a0a416530)
 - [AlertDialog](https://gist.github.com/mnishiguchi/c12bc4520bc06918d37b64579b779975)
 - [Toolbar](https://gist.github.com/mnishiguchi/a117cc7554638f741f3b175d25a4654c)
+- [Icons](https://gist.github.com/mnishiguchi/fa72ca4515d41c43c0245c079a756ad1)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)

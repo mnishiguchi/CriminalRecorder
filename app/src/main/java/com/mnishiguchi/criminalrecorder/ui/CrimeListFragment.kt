@@ -7,9 +7,7 @@ import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
@@ -19,17 +17,19 @@ import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
 import org.jetbrains.anko.toast
 
+
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
  */
 class CrimeListFragment : Fragment() {
     private val TAG = javaClass.simpleName
-    private val REQUEST_CRIME = 1
 
     lateinit private var dateFormat: java.text.DateFormat
     private var clickedPosition = -1
 
     companion object {
+        private val REQUEST_CRIME = 1
+
         // Define how a hosting activity should create this fragment.
         fun newInstance(): CrimeListFragment {
             return CrimeListFragment()
@@ -38,6 +38,9 @@ class CrimeListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
+        setHasOptionsMenu(true)
 
         // Create a DateFormat instance.
         dateFormat = this.context.mediumDateFormat()
@@ -82,6 +85,29 @@ class CrimeListFragment : Fragment() {
         updateUI()
     }
 
+    // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime_list, menu)
+    }
+
+    // Called when the user clicks on a menu item.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when (item.itemId) {
+
+            R.id.menu_item_new_crime -> {
+                val newCrime = CrimeLab.get(activity).newCrime()
+                val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
+                startActivity(intent)
+
+                return true  // Indicate that no further processing is necessary.
+            }
+
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun updateUI() {
         val crimes = CrimeLab.get(activity).crimes
 
@@ -98,7 +124,7 @@ class CrimeListFragment : Fragment() {
         } else {
             // Reload the list.
             // FIXME - Update data more efficiently
-            // - Maybe we can Uuse notifyItemChanged(Int) or google's new architecture components.
+            // - Maybe we can use notifyItemChanged(Int) or google's new architecture components.
             crimeList.adapter.notifyDataSetChanged()
         }
     }

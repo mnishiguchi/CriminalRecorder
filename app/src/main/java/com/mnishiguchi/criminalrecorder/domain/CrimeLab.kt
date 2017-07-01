@@ -9,13 +9,13 @@ import java.util.*
 class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
     lateinit private var context: Context
 
-    init {
-        // Populate the list with fake items.
-        for (i in 0..99) {
-            val crime = Crime(title = "Crime #${i + 1}", isSolved = i % 2 == 0)
-            crimes.add(crime)
-        }
-    }
+//    init {
+//        // Populate the list with fake items.
+//        for (i in 0..99) {
+//            val crime = Crime(title = "Crime #${i + 1}", isSolved = i % 2 == 0)
+//            crimes.add(crime)
+//        }
+//    }
 
     companion object {
         // Store the singleton instance.
@@ -28,5 +28,15 @@ class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
         }
     }
 
-    fun crime(id: UUID) : Crime? = crimes.find { it.id == id }
+    fun crime(id: UUID): Crime? = crimes.find { it.id == id }
+
+    fun add(crime: Crime): Crime {
+        crimes.add(crime)
+        return crime
+    }
+
+    /**
+     * Create a new blank crime in CrimeLab.
+     */
+    fun newCrime(): Crime = add(Crime())
 }
