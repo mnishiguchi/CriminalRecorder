@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -95,17 +96,33 @@ class CrimeListFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
         when (item.itemId) {
-
             R.id.menu_item_new_crime -> {
-                val newCrime = CrimeLab.get(activity).newCrime()
-                val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
-                startActivity(intent)
+                startBlankCrime()
+                return true // Indicate that no further processing is necessary.
+            }
 
-                return true  // Indicate that no further processing is necessary.
+            R.id.menu_item_show_subtitle -> {
+                updateSubtitle()
+                return true // Indicate that no further processing is necessary.
             }
 
             else -> return super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun startBlankCrime() {
+        val newCrime = CrimeLab.get(activity).newCrime()
+        val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
+        startActivity(intent)
+    }
+
+    private fun updateSubtitle() {
+        val crimeCount = CrimeLab.get(activity).crimes.size
+
+        // https://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling
+        val subtitle = getString(R.string.subtitle_format, crimeCount)
+
+        (activity as AppCompatActivity).supportActionBar?.subtitle = subtitle
     }
 
     private fun updateUI() {
