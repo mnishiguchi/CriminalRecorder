@@ -43,17 +43,17 @@ class CrimePagerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_crime_pager)
 
-        // Get a crime id from the intent so that we can determine the initial item.
+        // Get a crime uuid from the intent so that we can determine the initial item.
         val crimeId = intent.getSerializableExtra(EXTRA_CRIME_ID) as UUID
 
-        val crimes = CrimeLab.get(this).crimes
+        val crimes = CrimeLab.get(this).crimes()
 
         crimePager.adapter = object : FragmentStatePagerAdapter(supportFragmentManager) {
-            override fun getItem(position: Int): Fragment = CrimeFragment.newInstance(crimes[position].id)
+            override fun getItem(position: Int): Fragment = CrimeFragment.newInstance(crimes[position].uuid)
             override fun getCount(): Int = crimes.size
         }
 
-        // Set initial pager item based on the id provided by the previous activity.
-        crimePager.currentItem = crimes.indexOfFirst { it.id == crimeId }
+        // Set initial pager item based on the uuid provided by the previous activity.
+        crimePager.currentItem = crimes.indexOfFirst { it.uuid == crimeId }
     }
 }

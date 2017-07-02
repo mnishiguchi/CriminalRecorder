@@ -12,8 +12,8 @@ import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.utils.inflate
-import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
+import com.mnishiguchi.criminalrecorder.util.inflate
+import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
 import org.jetbrains.anko.toast
@@ -113,7 +113,7 @@ class CrimeListFragment : Fragment() {
         when (requestCode) {
             REQUEST_CRIME -> {
                 val crimeId = CrimeFragment.crimeIdResult(data)
-                activity.toast("crime id: $crimeId")
+                activity.toast("crime uuid: $crimeId")
             }
         }
     }
@@ -134,7 +134,7 @@ class CrimeListFragment : Fragment() {
     // Create a blank crime and open an editor (CrimeFragment).
     private fun startBlankCrime() {
         val newCrime = CrimeLab.get(activity).newCrime()
-        val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
+        val intent = CrimePagerActivity.newIntent(activity, newCrime.uuid)
         startActivity(intent)
     }
 
@@ -143,13 +143,13 @@ class CrimeListFragment : Fragment() {
         // Toggle the subtitle.
         (activity as AppCompatActivity).supportActionBar?.subtitle =
                 if (isSubtitleVisible) {
-                    val crimeCount = CrimeLab.get(activity).crimes.size
+                    val crimeCount = CrimeLab.get(activity).crimes().size
                     resources.getQuantityString(R.plurals.quantity_crime_count, crimeCount, crimeCount)
                 } else null
     }
 
     private fun updateUI() {
-        val crimes = CrimeLab.get(activity).crimes
+        val crimes = CrimeLab.get(activity).crimes()
 
         if (crimeList.adapter == null) {
             crimeList.adapter = CrimeListAdapter(crimes, dateFormat) {

@@ -13,7 +13,7 @@ import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
+import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
 import org.jetbrains.anko.bundleOf
 import org.jetbrains.anko.intentFor
@@ -153,7 +153,7 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume - currentCrimeId: ${crime.id}")
+        Log.d(TAG, "onResume - currentCrimeId: ${crime.uuid}")
         super.onResume()
     }
 
