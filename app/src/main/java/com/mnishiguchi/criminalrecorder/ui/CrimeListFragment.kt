@@ -163,8 +163,7 @@ class CrimeListFragment : Fragment() {
             }
         } else {
             // Reload the list.
-            // FIXME - Update data more efficiently
-            // - Maybe we can use notifyItemChanged(Int) or google's new architecture components.
+            // FIXME - Update data more efficiently using notifyItemChanged(Int) or google's new architecture components.
             crimeList.adapter.notifyDataSetChanged()
         }
 
@@ -209,7 +208,10 @@ class CrimeListFragment : Fragment() {
             : RecyclerView.ViewHolder(view) {
 
             fun bindCrime(crime: Crime, position: Int) = with(itemView) {
-                listItemCrimeTitle.text = crime.title
+                listItemCrimeTitle.text =
+                        if (crime.title.trim().isEmpty())
+                            resources.getString(android.R.string.unknownName)
+                        else crime.title
                 listItemCrimeDate.text = dateFormat.format(crime.date)
                 listItemCrimeIsSolved.isChecked = crime.isSolved
                 listItemCrimeIsSolved.setOnCheckedChangeListener {
