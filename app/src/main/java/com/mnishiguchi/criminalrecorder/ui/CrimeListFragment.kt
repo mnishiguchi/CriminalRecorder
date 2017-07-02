@@ -69,34 +69,6 @@ class CrimeListFragment : Fragment() {
         updateUI()
     }
 
-    // Called before onResume if a child activity set results.
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        Log.d(TAG, "onActivityResult")
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode != Activity.RESULT_OK) return
-
-        when (requestCode) {
-            REQUEST_CRIME -> {
-                val crimeId = CrimeFragment.crimeIdResult(data)
-                activity.toast("crime id: $crimeId")
-            }
-        }
-    }
-
-    // In general, onResume is the safest place to take actions to update a fragment view.
-    override fun onResume() {
-        Log.d(TAG, "onResume")
-        super.onResume()
-
-        updateUI()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
-    }
-
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -128,6 +100,34 @@ class CrimeListFragment : Fragment() {
             }
             else -> return super.onOptionsItemSelected(item)
         }
+    }
+
+    // Called before onResume if a child activity set results.
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        Log.d(TAG, "onActivityResult")
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode != Activity.RESULT_OK) return
+
+        when (requestCode) {
+            REQUEST_CRIME -> {
+                val crimeId = CrimeFragment.crimeIdResult(data)
+                activity.toast("crime id: $crimeId")
+            }
+        }
+    }
+
+    // In general, onResume is the safest place to take actions to update a fragment view.
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
+
+        updateUI()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
     }
 
     // Create a blank crime and open an editor (CrimeFragment).

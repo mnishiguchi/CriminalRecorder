@@ -8,9 +8,7 @@ import android.support.v4.app.FragmentManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
@@ -59,6 +57,9 @@ class CrimeFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
+        setHasOptionsMenu(true)
+
         // Find a crime in CrimeLab and store the ref.
         val crimeId = arguments.getSerializable(ARG_CRIME_ID) as UUID
         crime = CrimeLab.get(activity).crime(crimeId) ?: throw Exception("Could not find a crime with the specified uuid.")
@@ -105,6 +106,24 @@ class CrimeFragment : Fragment() {
         }
     }
 
+    // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime, menu)
+    }
+
+    // Called when the user clicks on a menu item.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.menu_item_delete_crime -> {
+                CrimeLab.get(activity).remove(crime)
+                activity.finish()
+                return true // Indicate that no further processing is necessary.
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         Log.d(TAG, "onActivityResult")
 
@@ -125,13 +144,6 @@ class CrimeFragment : Fragment() {
         }
     }
 
-    /**
-     * Update the date text based on a crime stored in the CrimeLab.
-     */
-    private fun updateDateText() {
-        crimeDate.text = df.format(crime.date)
-    }
-
     override fun onResume() {
         Log.d(TAG, "onResume - currentCrimeId: ${crime.id}")
         super.onResume()
@@ -140,5 +152,12 @@ class CrimeFragment : Fragment() {
     override fun onPause() {
         Log.d(TAG, "onPause")
         super.onPause()
+    }
+
+    /**
+     * Update the date text based on a crime stored in the CrimeLab.
+     */
+    private fun updateDateText() {
+        crimeDate.text = df.format(crime.date)
     }
 }

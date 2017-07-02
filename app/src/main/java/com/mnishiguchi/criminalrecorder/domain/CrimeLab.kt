@@ -28,8 +28,14 @@ class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
         }
     }
 
+    /**
+     * Find a crime by id.
+     */
     fun crime(id: UUID): Crime? = crimes.find { it.id == id }
 
+    /**
+     * Add a crime to CrimeLab.
+     */
     fun add(crime: Crime): Crime {
         crimes.add(crime)
         return crime
@@ -39,4 +45,12 @@ class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
      * Create a new blank crime in CrimeLab.
      */
     fun newCrime(): Crime = add(Crime())
+
+    /**
+     * Remove a crime from CrimeLab.
+     */
+    fun remove(crime: Crime): Unit {
+        crimes.remove(crime)
+    }
+
 }
