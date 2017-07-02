@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
+import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -17,6 +18,7 @@ import kotlinx.android.synthetic.main.fragment_crime.*
 import org.jetbrains.anko.bundleOf
 import org.jetbrains.anko.intentFor
 import java.util.*
+
 
 /**
  * Use the [CrimeFragment.newInstance] factory method to create an instance of this fragment.
@@ -116,8 +118,14 @@ class CrimeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_delete_crime -> {
-                CrimeLab.get(activity).remove(crime)
-                activity.finish()
+                AlertDialog.Builder(context)
+                        .setMessage("Are you sure?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            CrimeLab.get(activity).remove(crime)
+                            activity.finish()
+                        }
+                        .setNegativeButton("No") { _, _ -> }
+                        .show()
                 return true // Indicate that no further processing is necessary.
             }
             else -> return super.onOptionsItemSelected(item)
@@ -161,3 +169,5 @@ class CrimeFragment : Fragment() {
         crimeDate.text = df.format(crime.date)
     }
 }
+
+
