@@ -31,6 +31,7 @@ class CrimeListFragment : Fragment() {
 
     companion object {
         private val REQUEST_CRIME = 1
+        private val SAVED_IS_SUBTITLE_VISIBLE = "SAVED_IS_SUBTITLE_VISIBLE"
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(): CrimeListFragment {
@@ -40,6 +41,10 @@ class CrimeListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (savedInstanceState != null) {
+            isSubtitleVisible = savedInstanceState.getBoolean(SAVED_IS_SUBTITLE_VISIBLE, false)
+        }
 
         // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
         setHasOptionsMenu(true)
@@ -85,6 +90,11 @@ class CrimeListFragment : Fragment() {
         super.onResume()
 
         updateUI()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
     }
 
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
