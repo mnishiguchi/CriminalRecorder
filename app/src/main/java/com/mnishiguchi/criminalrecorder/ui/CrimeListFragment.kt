@@ -143,7 +143,7 @@ class CrimeListFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.subtitle =
                 if (isSubtitleVisible) {
                     val crimeCount = CrimeLab.get(activity).crimes.size
-                    getString(R.string.subtitle_format, crimeCount)
+                    resources.getQuantityString(R.plurals.quantity_crime_count, crimeCount, crimeCount)
                 } else null
     }
 
