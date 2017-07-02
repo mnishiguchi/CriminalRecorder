@@ -55,7 +55,6 @@ class CrimeListFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Log.d(TAG, "onCreateView")
-
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_crime_list, container, false)
     }
@@ -65,6 +64,8 @@ class CrimeListFragment : Fragment() {
 
         // LayoutManager handles the positioning of items and defines the scrolling behavior.
         crimeList.layoutManager = LinearLayoutManager(activity)
+
+        emptyListButton.setOnClickListener { startBlankCrime() }
 
         updateUI()
     }
@@ -165,6 +166,15 @@ class CrimeListFragment : Fragment() {
             // FIXME - Update data more efficiently
             // - Maybe we can use notifyItemChanged(Int) or google's new architecture components.
             crimeList.adapter.notifyDataSetChanged()
+        }
+
+        // Show the placeholder view if the list is empty.
+        if (crimes.isEmpty()) {
+            crimeList.visibility = View.GONE
+            emptyList.visibility = View.VISIBLE
+        } else {
+            crimeList.visibility = View.VISIBLE
+            emptyList.visibility = View.GONE
         }
 
         updateSubtitle()

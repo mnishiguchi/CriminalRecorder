@@ -1,8 +1,37 @@
-<android.support.v7.widget.RecyclerView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/crimeList"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.mnishiguchi.criminalrecorder.ui.CrimeListFragment">
-</android.support.v7.widget.RecyclerView>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/crimeList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Empty list -->
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/emptyList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/emptyListText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_data_available"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/emptyListButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/new_crime"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </android.support.constraint.ConstraintLayout>
+</FrameLayout>
