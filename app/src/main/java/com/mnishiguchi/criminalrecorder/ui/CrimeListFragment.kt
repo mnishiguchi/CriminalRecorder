@@ -1,7 +1,5 @@
 package com.mnishiguchi.criminalrecorder.ui
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
@@ -16,7 +14,6 @@ import com.mnishiguchi.criminalrecorder.utils.inflate
 import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
-import org.jetbrains.anko.toast
 
 
 /**
@@ -26,11 +23,9 @@ class CrimeListFragment : Fragment() {
     private val TAG = javaClass.simpleName
 
     lateinit private var dateFormat: java.text.DateFormat
-    private var clickedPosition = -1
     private var isSubtitleVisible = false
 
     companion object {
-        private val REQUEST_CRIME = 1
         private val SAVED_IS_SUBTITLE_VISIBLE = "SAVED_IS_SUBTITLE_VISIBLE"
 
         // Define how a hosting activity should create this fragment.
@@ -77,9 +72,10 @@ class CrimeListFragment : Fragment() {
 
         // Switch the "toggle subtitle" menu item.
         val menuItem: MenuItem = menu.findItem(R.id.menu_item_toggle_subtitle)
-        when (isSubtitleVisible) {
-            true -> menuItem.setTitle(R.string.hide_subtitle)
-            else -> menuItem.setTitle(R.string.show_subtitle)
+        if (isSubtitleVisible) {
+            menuItem.setTitle(R.string.hide_subtitle)
+        } else {
+            menuItem.setTitle(R.string.show_subtitle)
         }
     }
 
@@ -103,22 +99,7 @@ class CrimeListFragment : Fragment() {
         }
     }
 
-    // Called before onResume if a child activity set results.
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        Log.d(TAG, "onActivityResult")
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode != Activity.RESULT_OK) return
-
-        when (requestCode) {
-            REQUEST_CRIME -> {
-                val crimeId = CrimeFragment.crimeIdResult(data)
-                activity.toast("crime id: $crimeId")
-            }
-        }
-    }
-
-    // In general, onResume is the safest place to take actions to update a fragment view.
+    // In general, onResume is the safest place to take actions to save a fragment view.
     override fun onResume() {
         Log.d(TAG, "onResume")
         super.onResume()
@@ -133,8 +114,8 @@ class CrimeListFragment : Fragment() {
 
     // Create a blank crime and open an editor (CrimeFragment).
     private fun startBlankCrime() {
-        val newCrime = CrimeLab.get(activity).newCrime()
-        val intent = CrimePagerActivity.newIntent(activity, newCrime.id)
+        val newCrime = CrimeLab.new()
+        val intent = CrimePagerActivity.newIntent(activity, newCrime.uuid)
         startActivity(intent)
     }
 
@@ -143,32 +124,28 @@ class CrimeListFragment : Fragment() {
         // Toggle the subtitle.
         (activity as AppCompatActivity).supportActionBar?.subtitle =
                 if (isSubtitleVisible) {
-                    val crimeCount = CrimeLab.get(activity).crimes.size
+                    val crimeCount = CrimeLab.size
                     resources.getQuantityString(R.plurals.quantity_crime_count, crimeCount, crimeCount)
                 } else null
     }
 
     private fun updateUI() {
-        val crimes = CrimeLab.get(activity).crimes
+        val newDataSet = CrimeLab.crimes()
 
         if (crimeList.adapter == null) {
-            crimeList.adapter = CrimeListAdapter(crimes, dateFormat) {
+            crimeList.adapter = CrimeListAdapter(newDataSet, dateFormat) {
                 // on-click callback
-                (id), position ->
-                val intent = CrimePagerActivity.newIntent(activity, id)
-                startActivityForResult(intent, REQUEST_CRIME)
-
-                // Remember the position for later use.
-                clickedPosition = position
+                it, _ ->
+                val intent = CrimePagerActivity.newIntent(activity, it.uuid)
+                startActivity(intent)
             }
         } else {
             // Reload the list.
-            // FIXME - Update data more efficiently using notifyItemChanged(Int) or google's new architecture components.
             crimeList.adapter.notifyDataSetChanged()
         }
 
         // Show the placeholder view if the list is empty.
-        if (crimes.isEmpty()) {
+        if (newDataSet.isEmpty()) {
             crimeList.visibility = View.GONE
             emptyList.visibility = View.VISIBLE
         } else {
@@ -197,6 +174,7 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun getItemCount(): Int = crimes.size
+
 
         /**
          * A view holder for CrimeListAdapter.

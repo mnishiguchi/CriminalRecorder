@@ -16,9 +16,7 @@ import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
 import org.jetbrains.anko.bundleOf
-import org.jetbrains.anko.intentFor
 import java.util.*
-
 
 /**
  * Use the [CrimeFragment.newInstance] factory method to create an instance of this fragment.
@@ -32,7 +30,6 @@ class CrimeFragment : Fragment() {
 
     companion object {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
-        private val EXTRA_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.EXTRA_CRIME_ID"
         private val DIALOG_DATE = "DIALOG_DATE"
         private val REQUEST_DATE = 0
 
@@ -41,18 +38,6 @@ class CrimeFragment : Fragment() {
             return CrimeFragment().apply {
                 arguments = bundleOf(ARG_CRIME_ID to crimeId)
             }
-        }
-
-        // Define how the previous activity should get result.
-        fun crimeIdResult(data: Intent): UUID {
-            return data.getSerializableExtra(EXTRA_CRIME_ID) as UUID
-        }
-    }
-
-    // Tell the hosting activity to set result values because only activity can have results.
-    private fun setResult(crimeId: UUID) {
-        with(activity) {
-            setResult(Activity.RESULT_OK, intentFor<CrimeFragment>(EXTRA_CRIME_ID to crimeId))
         }
     }
 
@@ -63,13 +48,11 @@ class CrimeFragment : Fragment() {
         setHasOptionsMenu(true)
 
         // Find a crime in CrimeLab and store the ref.
-        val crimeId = arguments.getSerializable(ARG_CRIME_ID) as UUID
-        crime = CrimeLab.get(activity).crime(crimeId) ?: throw Exception("Could not find a crime with the specified uuid.")
+        val uuid = arguments.getSerializable(ARG_CRIME_ID) as UUID
+        crime = CrimeLab.crime(uuid) ?: throw Exception("Could not find a crime (uuid: $uuid)")
 
         // Create a DateFormat instance.
         df = this.context.mediumDateFormat()
-
-        setResult(crimeId)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -95,17 +78,14 @@ class CrimeFragment : Fragment() {
         })
 
         crimeDate.setOnClickListener {
-            val dialog = DatePickerFragment.newInstance(crime.date)
+            val dialog = DatePickerFragment.newInstance(Date(crime.date))
             dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
             dialog.show(fm, DIALOG_DATE)
         }
         updateDateText()
 
         crimeSolved.isChecked = crime.isSolved
-        crimeSolved.setOnCheckedChangeListener {
-            _, isChecked ->
-            crime.isSolved = isChecked
-        }
+        crimeSolved.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
     }
 
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
@@ -121,7 +101,7 @@ class CrimeFragment : Fragment() {
                 AlertDialog.Builder(context)
                         .setMessage("Are you sure?")
                         .setPositiveButton("Yes") { _, _ ->
-                            CrimeLab.get(activity).remove(crime)
+                            CrimeLab.remove(crime)
                             activity.finish()
                         }
                         .setNegativeButton("No") { _, _ -> }
@@ -144,7 +124,7 @@ class CrimeFragment : Fragment() {
             REQUEST_DATE -> {
                 data?.let {
                     // Update the crime date to CrimeLab.
-                    crime.date = DatePickerFragment.dateResult(data)
+                    crime.date = DatePickerFragment.dateResult(data).time
 
                     updateDateText()
                 }
@@ -153,13 +133,16 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume - currentCrimeId: ${crime.id}")
+        Log.d(TAG, "onResume - currentCrimeId: ${crime.uuid}")
         super.onResume()
     }
 
     override fun onPause() {
         Log.d(TAG, "onPause")
         super.onPause()
+
+        Log.d(TAG, "_id: ${crime._id}")
+        CrimeLab.save(crime)
     }
 
     /**

@@ -1,56 +1,73 @@
 package com.mnishiguchi.criminalrecorder.domain
 
-import android.content.Context
+import com.mnishiguchi.criminalrecorder.data.CrimeDao
 import java.util.*
 
 /**
- * A singleton central data storage that stores the list of crimes.
+ * A singleton central repository.
  */
-class CrimeLab(val crimes: MutableList<Crime> = mutableListOf<Crime>()) {
-    lateinit private var context: Context
+object CrimeLab {
+    private val dao: CrimeDao = CrimeDao()
 
-//    init {
-//        // Populate the list with fake items.
-//        for (i in 0..99) {
-//            val crime = Crime(title = "Crime #${i + 1}", isSolved = i % 2 == 0)
-//            crimes.add(crime)
-//        }
-//    }
+    // In-memory storage for the crime data.
+    private var inMemoryCrimes = mutableListOf<Crime>()
 
-    companion object {
-        // Store the singleton instance.
-        private val instance = CrimeLab()
+    init {
+        reload()
+    }
 
-        // Getter for the singleton instance.
-        fun get(context: Context): CrimeLab {
-            instance.context = context.applicationContext
-            return instance
+    val size: Int
+        get() = inMemoryCrimes.size
+
+    operator fun get(position: Int) = inMemoryCrimes[position]
+
+    /**
+     * Sync the in-memory store with database.
+     */
+    fun reload(): Unit {
+        inMemoryCrimes = dao.all() as MutableList<Crime>
+    }
+
+    /* Read-only operations
+       - Read from in-memory store, assuming that it is always up-to-date.
+     */
+
+    /**
+     * Get all the crimes stored in the in-memory store.
+     */
+    fun crimes(): MutableList<Crime> = inMemoryCrimes
+
+    /**
+     * Find a crime by uuid.
+     */
+    fun crime(uuid: UUID): Crime? = inMemoryCrimes.find { it.uuid == uuid }
+
+    /* Write operations
+       - Whenever we make a change to database, we must update the in-memory store.
+     */
+
+    /**
+     * Create a new blank crime.
+     */
+    fun new(): Crime = dao.newRecord().apply { inMemoryCrimes.add(this) }
+
+    /**
+     * Save the changes of an existing record.
+     */
+    fun save(crime: Crime): Unit {
+        inMemoryCrimes.forEachIndexed { index, it ->
+            if (it._id == crime._id) {
+                inMemoryCrimes[index] = crime
+            }
         }
+        dao.update(crime)
     }
 
     /**
-     * Find a crime by id.
-     */
-    fun crime(id: UUID): Crime? = crimes.find { it.id == id }
-
-    /**
-     * Add a crime to CrimeLab.
-     */
-    fun add(crime: Crime): Crime {
-        crimes.add(crime)
-        return crime
-    }
-
-    /**
-     * Create a new blank crime in CrimeLab.
-     */
-    fun newCrime(): Crime = add(Crime())
-
-    /**
-     * Remove a crime from CrimeLab.
+     * Remove a crime.
      */
     fun remove(crime: Crime): Unit {
-        crimes.remove(crime)
+        inMemoryCrimes.remove(crime)
+        dao.delete(crime)
     }
-
 }

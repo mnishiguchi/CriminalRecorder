@@ -20,4 +20,5 @@ I do this exercise using Kotlin instead of Java.
 - [Run Apps on a Hardware Device](https://gist.github.com/mnishiguchi/0c2bfdf1d60f1afaffbd1fc5f9a8f92c)
 - [Saving and restoring activity state](https://gist.github.com/mnishiguchi/468036d6498958085f1dfec9f9272d17)
 - [Plural strings / Quantity strings](https://gist.github.com/mnishiguchi/ad4dee5706fbad1507a275822e2d096a)
+- [Debugging database](https://gist.github.com/mnishiguchi/92591204470ccc3ea6632cc5a045a11b)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)
