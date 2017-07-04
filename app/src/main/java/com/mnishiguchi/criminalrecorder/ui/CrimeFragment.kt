@@ -56,7 +56,7 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(TAG, "onCreateView")
+        Log.d(TAG, "onCreateView: _id: ${crime._id}")
 
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_crime, container, false)
@@ -64,7 +64,7 @@ class CrimeFragment : Fragment() {
 
     // https://developer.android.com/reference/android/app/Fragment.html#onViewCreated(android.view.View, android.os.Bundle)
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
-        Log.d(TAG, "onViewCreated")
+        Log.d(TAG, "onViewCreated: _id: ${crime._id}")
         super.onViewCreated(view, savedInstanceState)
 
         crimeTitle.setText(crime.title)
@@ -86,6 +86,8 @@ class CrimeFragment : Fragment() {
 
         crimeSolved.isChecked = crime.isSolved
         crimeSolved.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
+
+        crimeReport.setOnClickListener { sendCrimeReport() }
     }
 
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
@@ -113,7 +115,7 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.d(TAG, "onActivityResult")
+        Log.d(TAG, "onActivityResult: _id: ${crime._id}")
 
         if (resultCode != Activity.RESULT_OK) {
             Log.d(TAG, "Result was not OK")
@@ -133,12 +135,12 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume - currentCrimeId: ${crime.uuid}")
+        Log.d(TAG, "onResume: _id: ${crime._id}")
         super.onResume()
     }
 
     override fun onPause() {
-        Log.d(TAG, "onPause")
+        Log.d(TAG, "onResume: _id: ${crime._id}")
         super.onPause()
 
         Log.d(TAG, "_id: ${crime._id}")
@@ -148,8 +150,42 @@ class CrimeFragment : Fragment() {
     /**
      * Update the date text based on a crime stored in the CrimeLab.
      */
-    private fun updateDateText() {
+    private fun updateDateText(): Unit {
         crimeDate.text = df.format(crime.date)
+    }
+
+    /**
+     * Start an application that can send a report.
+     */
+    private fun sendCrimeReport(): Unit {
+        val intent: Intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, getCrimeReport())
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject))
+        }
+        startActivity(intent)
+    }
+
+    /**
+     * Generate a text for a crime report.
+     */
+    private fun getCrimeReport(): String {
+        val dateString = getString(R.string.crime_report_date, df.format(crime.date))
+
+        val solvedString = if (crime.isSolved) {
+            getString(R.string.crime_report_solved)
+        } else {
+            getString(R.string.crime_report_unsolved)
+        }
+
+        val suspectString = if (crime.suspect.isBlank()) {
+            getString(R.string.crime_report_no_suspect)
+        } else {
+            getString(R.string.crime_report_suspect)
+        }
+
+        return getString(R.string.crime_report,
+                crime.title, dateString, solvedString, suspectString).trim()
     }
 }
 

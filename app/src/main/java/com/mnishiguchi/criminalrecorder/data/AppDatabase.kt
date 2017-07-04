@@ -24,7 +24,8 @@ object AppDatabase : ManagedSQLiteOpenHelper(App.instance, "app_database.db", nu
                 CrimeTable.UUID to TEXT + UNIQUE,
                 CrimeTable.TITLE to TEXT,
                 CrimeTable.DATE to INTEGER,
-                CrimeTable.IS_SOLVED to INTEGER
+                CrimeTable.IS_SOLVED to INTEGER,
+                CrimeTable.SUSPECT to TEXT
         )
     }
 
@@ -43,5 +44,6 @@ object AppDatabase : ManagedSQLiteOpenHelper(App.instance, "app_database.db", nu
         val TITLE = "title"
         val DATE = "date"
         val IS_SOLVED = "isSolved"
+        val SUSPECT = "suspect"
     }
 }

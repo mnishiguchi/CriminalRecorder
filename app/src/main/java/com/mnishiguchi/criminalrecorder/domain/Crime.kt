@@ -10,4 +10,7 @@ data class Crime(
         val uuid: UUID = UUID.randomUUID(),
         var title: String = "",
         var date: Long = Date().time,
-        var isSolved: Boolean = false)
+        var isSolved: Boolean = false,
+        var suspect: String = ""
+)
+// Make sure all the properties are given a default value.

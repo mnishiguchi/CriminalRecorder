@@ -25,13 +25,17 @@ class CrimeEntity(val map: MutableMap<String, Any?>) {
     var title: String by map
     var date: Long by map
     var isSolved: Int by map
+    var suspect: String by map
 
     // For converting domain to database
-    constructor(_id: Long, uuid: String, title: String, date: Long, isSolved: Int) : this(HashMap()) {
+    constructor(_id: Long, uuid: String, title: String, date: Long, isSolved: Int, suspect: String)
+            : this(HashMap()) {
+
         this._id = _id
         this.uuid = uuid
         this.title = title
         this.date = date
         this.isSolved = isSolved
+        this.suspect = suspect
     }
 }

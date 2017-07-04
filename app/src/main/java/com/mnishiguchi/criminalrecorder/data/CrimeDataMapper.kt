@@ -15,7 +15,8 @@ object CrimeDataMapper {
                 uuid = uuid.toString(),
                 title = title,
                 date = date,
-                isSolved = if (isSolved) 1 else 0
+                isSolved = if (isSolved) 1 else 0,
+                suspect = suspect
         )
     }
 
@@ -26,7 +27,8 @@ object CrimeDataMapper {
                 uuid = UUID.fromString(uuid), // String -> UUID
                 title = title,
                 date = date,
-                isSolved = isSolved == 1 // Int -> Boolean
+                isSolved = isSolved == 1, // Int -> Boolean
+                suspect = suspect
         )
     }
 }

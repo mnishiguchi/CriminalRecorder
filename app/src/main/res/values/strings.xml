@@ -15,4 +15,12 @@
         <item quantity="one">%1$d crime</item>
         <item quantity="other">%1$d crimes</item>
     </plurals>
+    <string name="crime_report">%1$s\n%2$s\n%3$s\n%4$s</string>
+    <string name="crime_report_subject">Crime Report | Criminal Recorder</string>
+    <string name="crime_report_date">The crime was discovered on %s.</string>
+    <string name="crime_report_solved">The case is solved.</string>
+    <string name="crime_report_unsolved">The case is unsolved.</string>
+    <string name="crime_report_no_suspect">There is no suspect.</string>
+    <string name="crime_report_suspect">The suspect is %s.</string>
+    <string name="send_report">Send Crime Report via</string>
 </resources>
