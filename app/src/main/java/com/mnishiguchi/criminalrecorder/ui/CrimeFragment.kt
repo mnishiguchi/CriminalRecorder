@@ -2,7 +2,10 @@ package com.mnishiguchi.criminalrecorder.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.database.Cursor
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AlertDialog
@@ -32,6 +35,7 @@ class CrimeFragment : Fragment() {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
         private val DIALOG_DATE = "DIALOG_DATE"
         private val REQUEST_DATE = 0
+        private val REQUEST_CONTACT = 1
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(crimeId: UUID): CrimeFragment {
@@ -88,6 +92,15 @@ class CrimeFragment : Fragment() {
         crimeSolved.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
 
         crimeReport.setOnClickListener { sendCrimeReport() }
+
+        crimeSuspect.setOnClickListener { startContactListForSuspect() }
+        if (!crime.suspect.isBlank()) {
+            crimeSuspect.text = crime.suspect
+        }
+
+        if (!isContactListAvailable()) {
+            crimeSuspect.isEnabled = false
+        }
     }
 
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
@@ -122,13 +135,18 @@ class CrimeFragment : Fragment() {
             return
         }
 
+        // Make sure that we update both in-memory representaion and UI.
         when (requestCode) {
             REQUEST_DATE -> {
                 data?.let {
-                    // Update the crime date to CrimeLab.
-                    crime.date = DatePickerFragment.dateResult(data).time
-
-                    updateDateText()
+                    crime.date = DatePickerFragment.dateResult(data).time // In-memory
+                    updateDateText() // UI
+                }
+            }
+            REQUEST_CONTACT -> {
+                data?.let {
+                    crime.suspect = getSuspectNameFromContactList(data) // In-memory
+                    crimeSuspect.text = crime.suspect // UI
                 }
             }
         }
@@ -142,8 +160,6 @@ class CrimeFragment : Fragment() {
     override fun onPause() {
         Log.d(TAG, "onResume: _id: ${crime._id}")
         super.onPause()
-
-        Log.d(TAG, "_id: ${crime._id}")
         CrimeLab.save(crime)
     }
 
@@ -152,6 +168,32 @@ class CrimeFragment : Fragment() {
      */
     private fun updateDateText(): Unit {
         crimeDate.text = df.format(crime.date)
+    }
+
+    /**
+     * Start the contact list app.
+     */
+    private fun startContactListForSuspect(): Unit {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+        startActivityForResult(intent, REQUEST_CONTACT)
+    }
+
+    /**
+     * Get a contact name from the result intent.
+     */
+    private fun getSuspectNameFromContactList(result: Intent): String {
+        val contactUri = result.getData()
+
+        // Specify which fields we want our query to return.
+        val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
+
+        // Perform query like SQL where.
+        val cursor: Cursor = activity.contentResolver.query(contactUri, queryFields, null, null, null)
+
+        cursor.use { c ->
+            // Pull out the first column of the first row.
+            return if (c.count == 0) "" else with(c) { moveToFirst(); getString(0) }
+        }
     }
 
     /**
@@ -182,11 +224,28 @@ class CrimeFragment : Fragment() {
         val suspectString = if (crime.suspect.isBlank()) {
             getString(R.string.crime_report_no_suspect)
         } else {
-            getString(R.string.crime_report_suspect)
+            getString(R.string.crime_report_suspect, crime.suspect)
         }
 
         return getString(R.string.crime_report,
                 crime.title, dateString, solvedString, suspectString).trim()
+    }
+
+    /**
+     * Check if a contact list app is available on the device.
+     */
+    private fun isContactListAvailable(): Boolean {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+        return isValidIntent(intent)
+    }
+
+    /**
+     * Check if an operation specified in the intent is doable on the device.
+     */
+    private fun isValidIntent(intent: Intent): Boolean {
+        // The packageManager knows all the components installed on a device and finds an activity
+        // that matches the specified intent. Restricts the search to activities with the CATEGORY_DEFAULT.
+        return activity.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null
     }
 }
 
