@@ -158,12 +158,13 @@ class CrimeFragment : Fragment() {
      * Start an application that can send a report.
      */
     private fun sendCrimeReport(): Unit {
-        val intent: Intent = Intent(Intent.ACTION_SEND).apply {
+        val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, getCrimeReport())
             putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject))
         }
-        startActivity(intent)
+        val intentWithChooser = Intent.createChooser(intent, getString(R.string.send_report))
+        startActivity(intentWithChooser)
     }
 
     /**
