@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
+import android.support.v4.app.ShareCompat
 import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
@@ -200,13 +201,13 @@ class CrimeFragment : Fragment() {
      * Start an application that can send a report.
      */
     private fun sendCrimeReport(): Unit {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, getCrimeReport())
-            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject))
-        }
-        val intentWithChooser = Intent.createChooser(intent, getString(R.string.send_report))
-        startActivity(intentWithChooser)
+        val intent: Intent = ShareCompat.IntentBuilder.from(activity)
+                .setType("text/plain")
+                .setSubject(getString(R.string.crime_report_subject))
+                .setText(getCrimeReport())
+                .setChooserTitle(getString(R.string.send_report))
+                .createChooserIntent()
+        startActivity(intent)
     }
 
     /**
