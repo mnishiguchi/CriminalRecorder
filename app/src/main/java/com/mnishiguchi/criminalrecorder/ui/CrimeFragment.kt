@@ -19,6 +19,7 @@ import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
 import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
+import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
 import java.util.*
 
