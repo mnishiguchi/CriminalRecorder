@@ -1,4 +1,4 @@
-package com.mnishiguchi.criminalrecorder.utils
+package com.mnishiguchi.criminalrecorder.util
 
 import android.database.sqlite.SQLiteDatabase
 import org.jetbrains.anko.db.MapRowParser

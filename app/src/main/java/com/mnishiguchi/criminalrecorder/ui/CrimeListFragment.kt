@@ -10,8 +10,8 @@ import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.utils.inflate
-import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
+import com.mnishiguchi.criminalrecorder.util.inflate
+import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
 

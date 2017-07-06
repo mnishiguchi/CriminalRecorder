@@ -1,4 +1,4 @@
-package com.mnishiguchi.criminalrecorder.utils
+package com.mnishiguchi.criminalrecorder.util
 
 import android.view.LayoutInflater
 import android.view.View

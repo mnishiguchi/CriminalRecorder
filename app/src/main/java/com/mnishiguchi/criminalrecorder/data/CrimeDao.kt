@@ -2,10 +2,10 @@ package com.mnishiguchi.criminalrecorder.data
 
 import android.util.Log
 import com.mnishiguchi.criminalrecorder.domain.Crime
-import com.mnishiguchi.criminalrecorder.utils.byId
-import com.mnishiguchi.criminalrecorder.utils.parseListWithMap
-import com.mnishiguchi.criminalrecorder.utils.parseOptWithMap
-import com.mnishiguchi.criminalrecorder.utils.toVarargArray
+import com.mnishiguchi.criminalrecorder.util.byId
+import com.mnishiguchi.criminalrecorder.util.parseListWithMap
+import com.mnishiguchi.criminalrecorder.util.parseOptWithMap
+import com.mnishiguchi.criminalrecorder.util.toVarargArray
 import org.jetbrains.anko.db.*
 import java.util.*
 

@@ -1,4 +1,4 @@
-package com.mnishiguchi.criminalrecorder.utils
+package com.mnishiguchi.criminalrecorder.util
 
 /**
  * Converts a map with a nullable values (a requirement of the map delegate)

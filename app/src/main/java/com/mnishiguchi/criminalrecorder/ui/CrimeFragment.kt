@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -19,7 +20,8 @@ import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
+import com.mnishiguchi.criminalrecorder.util.getScaledBitmap
+import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
 import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
@@ -67,6 +69,10 @@ class CrimeFragment : Fragment() {
 
         // Create a DateFormat instance.
         df = this.context.mediumDateFormat()
+
+        Log.d(TAG, "photoFile: $photoFile")
+        Log.d(TAG, "canTakePhoto: $canTakePhoto")
+        Log.d(TAG, "canUseContactList: $canUseContactList")
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -81,6 +87,11 @@ class CrimeFragment : Fragment() {
         Log.d(TAG, "onViewCreated: _id: ${crime._id}")
         super.onViewCreated(view, savedInstanceState)
 
+        updatePhotoView()
+
+        crimeCameraButton.isEnabled = canTakePhoto
+        crimeCameraButton.setOnClickListener { startCameraForResult() }
+
         crimeTitle.setText(crime.title)
         crimeTitle.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -90,9 +101,6 @@ class CrimeFragment : Fragment() {
 
             override fun afterTextChanged(s: Editable?) {}
         })
-
-        crimeCameraButton.isEnabled = canTakePhoto
-        crimeCameraButton.setOnClickListener { startCameraForResult() }
 
         crimeDate.setOnClickListener { startDatePickerForResult() }
         updateDateText()
@@ -157,6 +165,9 @@ class CrimeFragment : Fragment() {
                     crimeSuspectButton.text = crime.suspect // UI
                 }
             }
+            REQUEST_PHOTO -> {
+                updatePhotoView()
+            }
         }
     }
 
@@ -176,6 +187,15 @@ class CrimeFragment : Fragment() {
      */
     private fun updateDateText(): Unit {
         crimeDate.text = df.format(crime.date)
+    }
+
+    private fun updatePhotoView() {
+        if (photoFile != null && photoFile!!.exists()) {
+            val bitmap: Bitmap? = activity.getScaledBitmap(photoFile!!.path)
+            crimePhoto.setImageBitmap(bitmap)
+        } else {
+            crimePhoto.setImageDrawable(null)
+        }
     }
 
     /**
@@ -246,8 +266,9 @@ class CrimeFragment : Fragment() {
     }
 
     private fun startCameraForResult(): Unit {
+        if (!canTakePhoto) return
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        if (canTakePhoto) intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
         startActivityForResult(intent, REQUEST_PHOTO)
     }
 
@@ -268,5 +289,3 @@ class CrimeFragment : Fragment() {
         return Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(activity.packageManager) != null
     }
 }
-
-
