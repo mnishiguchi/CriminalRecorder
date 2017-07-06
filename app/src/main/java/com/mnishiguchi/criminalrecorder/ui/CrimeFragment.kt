@@ -4,8 +4,10 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.ShareCompat
@@ -21,6 +23,7 @@ import com.mnishiguchi.criminalrecorder.utils.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime.*
 import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
+import java.io.File
 import java.util.*
 
 /**
@@ -31,6 +34,10 @@ class CrimeFragment : Fragment() {
 
     lateinit private var crime: Crime
     lateinit private var df: java.text.DateFormat
+
+    private val photoFile: File? by lazy { CrimeLab.photoFile(crime) } // Null if no external storage was found!!
+    private val canTakePhoto: Boolean by lazy { photoFile != null && isCameraAvailable() }
+    private val canUseContactList: Boolean by lazy { isContactListAvailable() }
     private val fm: FragmentManager by lazy { activity.supportFragmentManager }
 
     companion object {
@@ -38,6 +45,7 @@ class CrimeFragment : Fragment() {
         private val DIALOG_DATE = "DIALOG_DATE"
         private val REQUEST_DATE = 0
         private val REQUEST_CONTACT = 1
+        private val REQUEST_PHOTO = 2
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(crimeId: UUID): CrimeFragment {
@@ -83,25 +91,23 @@ class CrimeFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        crimeDate.setOnClickListener {
-            val dialog = DatePickerFragment.newInstance(Date(crime.date))
-            dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
-            dialog.show(fm, DIALOG_DATE)
-        }
+        crimeCameraButton.isEnabled = canTakePhoto
+        crimeCameraButton.setOnClickListener { startCameraForResult() }
+
+        crimeDate.setOnClickListener { startDatePickerForResult() }
         updateDateText()
 
-        crimeSolved.isChecked = crime.isSolved
-        crimeSolved.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
+        crimeSolvedButton.isChecked = crime.isSolved
+        crimeSolvedButton.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
 
-        crimeReport.setOnClickListener { sendCrimeReport() }
+        crimeReportButton.setOnClickListener { sendCrimeReport() }
 
-        crimeSuspect.setOnClickListener { startContactListForSuspect() }
+        crimeSuspectButton.setOnClickListener { startContactListForSuspect() }
         if (!crime.suspect.isBlank()) {
-            crimeSuspect.text = crime.suspect
+            crimeSuspectButton.text = crime.suspect
         }
-
-        if (!isContactListAvailable()) {
-            crimeSuspect.isEnabled = false
+        if (!canUseContactList) {
+            crimeSuspectButton.isEnabled = false
         }
     }
 
@@ -148,7 +154,7 @@ class CrimeFragment : Fragment() {
             REQUEST_CONTACT -> {
                 data?.let {
                     crime.suspect = getSuspectNameFromContactList(data) // In-memory
-                    crimeSuspect.text = crime.suspect // UI
+                    crimeSuspectButton.text = crime.suspect // UI
                 }
             }
         }
@@ -205,7 +211,7 @@ class CrimeFragment : Fragment() {
         val intent: Intent = ShareCompat.IntentBuilder.from(activity)
                 .setType("text/plain")
                 .setSubject(getString(R.string.crime_report_subject))
-                .setText(getCrimeReport())
+                .setText(getCrimeReportText())
                 .setChooserTitle(getString(R.string.send_report))
                 .createChooserIntent()
         startActivity(intent)
@@ -214,7 +220,7 @@ class CrimeFragment : Fragment() {
     /**
      * Generate a text for a crime report.
      */
-    private fun getCrimeReport(): String {
+    private fun getCrimeReportText(): String {
         val dateString = getString(R.string.crime_report_date, df.format(crime.date))
 
         val solvedString = if (crime.isSolved) {
@@ -233,21 +239,33 @@ class CrimeFragment : Fragment() {
                 crime.title, dateString, solvedString, suspectString).trim()
     }
 
-    /**
-     * Check if a contact list app is available on the device.
-     */
-    private fun isContactListAvailable(): Boolean {
-        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
-        return isValidIntent(intent)
+    private fun startDatePickerForResult(): Unit {
+        val dialog = DatePickerFragment.newInstance(Date(crime.date))
+        dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
+        dialog.show(fm, DIALOG_DATE)
+    }
+
+    private fun startCameraForResult(): Unit {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        if (canTakePhoto) intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
+        startActivityForResult(intent, REQUEST_PHOTO)
     }
 
     /**
-     * Check if an operation specified in the intent is doable on the device.
+     * @return true if a contact list app is available on the device.
      */
-    private fun isValidIntent(intent: Intent): Boolean {
+    private fun isContactListAvailable(): Boolean {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
         // The packageManager knows all the components installed on a device and finds an activity
         // that matches the specified intent. Restricts the search to activities with the CATEGORY_DEFAULT.
         return activity.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null
+    }
+
+    /**
+     * @return true if a user can take a photo on the device.
+     */
+    private fun isCameraAvailable(): Boolean {
+        return Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(activity.packageManager) != null
     }
 }
 

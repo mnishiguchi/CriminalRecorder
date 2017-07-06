@@ -22,4 +22,5 @@ I do this exercise using Kotlin instead of Java.
 - [Plural strings / Quantity strings](https://gist.github.com/mnishiguchi/ad4dee5706fbad1507a275822e2d096a)
 - [Debugging database](https://gist.github.com/mnishiguchi/92591204470ccc3ea6632cc5a045a11b)
 - [Intent](https://gist.github.com/mnishiguchi/852c4093ab07e796fbf8c1dd2c0f1ac1)
+- [File storage](https://gist.github.com/mnishiguchi/7b21b3c4c527013ad141e0c527b362b1)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)

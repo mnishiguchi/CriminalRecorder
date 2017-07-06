@@ -1,6 +1,9 @@
 package com.mnishiguchi.criminalrecorder.domain
 
+import android.os.Environment
 import com.mnishiguchi.criminalrecorder.data.CrimeDao
+import com.mnishiguchi.criminalrecorder.ui.App
+import java.io.File
 import java.util.*
 
 /**
@@ -69,5 +72,16 @@ object CrimeLab {
     fun remove(crime: Crime): Unit {
         inMemoryCrimes.remove(crime)
         dao.delete(crime)
+    }
+
+    /* Others */
+
+    /**
+     * Find the right location for a photo file (a subdirectory of the primary location root).
+     * @return A file object that points to the file location if it exists, else null.
+     */
+    fun photoFile(crime: Crime): File? {
+        val externalFilesDir = App.instance.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return externalFilesDir?.let { File(externalFilesDir, crime.photoFileName()) }
     }
 }

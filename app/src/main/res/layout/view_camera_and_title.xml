@@ -19,7 +19,7 @@
             android:cropToPadding="true"
             android:scaleType="centerInside" />
         <ImageButton
-            android:id="@+id/crimeCamera"
+            android:id="@+id/crimeCameraButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:srcCompat="@android:drawable/ic_menu_camera" />

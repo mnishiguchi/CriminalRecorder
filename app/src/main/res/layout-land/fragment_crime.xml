@@ -21,7 +21,7 @@
             android:layout_weight="1"
             tools:text="Date" />
         <CheckBox
-            android:id="@+id/crimeSolved"
+            android:id="@+id/crimeSolvedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -35,14 +35,14 @@
         android:layout_marginRight="16dp"
         android:orientation="horizontal">
         <Button
-            android:id="@+id/crimeSuspect"
+            android:id="@+id/crimeSuspectButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Choose Suspect" />
 
         <Button
-            android:id="@+id/crimeReport"
+            android:id="@+id/crimeReportButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
