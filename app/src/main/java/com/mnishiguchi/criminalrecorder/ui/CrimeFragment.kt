@@ -83,11 +83,17 @@ class CrimeFragment : Fragment() {
     }
 
     // https://developer.android.com/reference/android/app/Fragment.html#onViewCreated(android.view.View, android.os.Bundle)
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         Log.d(TAG, "onViewCreated: _id: ${crime._id}")
         super.onViewCreated(view, savedInstanceState)
 
-        updatePhotoView()
+        crimePhoto.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout(): Unit {
+                // Update the photo view only once, taking into consideration the view size.
+                updatePhotoView()
+                crimePhoto.viewTreeObserver.removeOnGlobalLayoutListener(this)
+            }
+        })
 
         crimeCameraButton.isEnabled = canTakePhoto
         crimeCameraButton.setOnClickListener { startCameraForResult() }
@@ -189,9 +195,14 @@ class CrimeFragment : Fragment() {
         crimeDate.text = df.format(crime.date)
     }
 
+    /**
+     * Update the photo view after resizing it to the view size.
+     */
     private fun updatePhotoView() {
+        Log.d(TAG, "updatePhotoView: ${crimePhoto.width} x ${crimePhoto.height}")
+
         if (photoFile != null && photoFile!!.exists()) {
-            val bitmap: Bitmap? = activity.getScaledBitmap(photoFile!!.path)
+            val bitmap: Bitmap? = crimePhoto.getScaledBitmap(photoFile!!.path)
             crimePhoto.setImageBitmap(bitmap)
         } else {
             crimePhoto.setImageDrawable(null)

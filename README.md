@@ -23,4 +23,5 @@ I do this exercise using Kotlin instead of Java.
 - [Debugging database](https://gist.github.com/mnishiguchi/92591204470ccc3ea6632cc5a045a11b)
 - [Intent](https://gist.github.com/mnishiguchi/852c4093ab07e796fbf8c1dd2c0f1ac1)
 - [File storage](https://gist.github.com/mnishiguchi/7b21b3c4c527013ad141e0c527b362b1)
+- [Pictures](https://gist.github.com/mnishiguchi/26cd5989be19d25fe44433537ab7ab1d)
 - [etc](https://github.com/mnishiguchi/CriminalIntent2)

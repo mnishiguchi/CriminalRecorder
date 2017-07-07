@@ -4,10 +4,10 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Point
+import android.view.View
 
 /**
  * Get an image data from a file and scale it down to fit the current Window size.
- * The orientation is not considered.
  */
 fun Activity.getScaledBitmap(path: String): Bitmap {
     val size: Point = Point()
@@ -16,10 +16,16 @@ fun Activity.getScaledBitmap(path: String): Bitmap {
 }
 
 /**
- * Get an image data from a file and scale it down to fit a given Window size.
- * The orientation is not considered.
+ * Get an image data from a file and scale it down to fit the view size.
  */
-fun getScaledBitmap(path: String, destWidth: Int, destHeight: Int): Bitmap {
+fun View.getScaledBitmap(path: String): Bitmap {
+    return getScaledBitmap(path, width, height)
+}
+
+/**
+ * Get an image data from a file and scale it down to fit given dimensions.
+ */
+private fun getScaledBitmap(path: String, destWidth: Int, destHeight: Int): Bitmap {
     // Read in the dimensions of the image on disk.
     var srcWidth: Float = 0.0F
     var srcHeight: Float = 0.0F
