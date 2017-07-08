@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -20,8 +19,8 @@ import android.view.*
 import com.mnishiguchi.criminalrecorder.R
 import com.mnishiguchi.criminalrecorder.domain.Crime
 import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.util.getScaledBitmap
 import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
+import com.mnishiguchi.criminalrecorder.util.setScaledImageBitmap
 import kotlinx.android.synthetic.main.fragment_crime.*
 import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
@@ -88,14 +87,8 @@ class CrimeFragment : Fragment() {
         Log.d(TAG, "onViewCreated: _id: ${crime._id}")
         super.onViewCreated(view, savedInstanceState)
 
-        crimePhoto.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout(): Unit {
-                // Update the photo view only once, taking into consideration the view size.
-                updatePhotoView()
-                crimePhoto.viewTreeObserver.removeOnGlobalLayoutListener(this)
-            }
-        })
-        crimePhoto.setOnClickListener { showZoomedInPhoto() }
+        crimePhoto.setOnClickListener { showFillScreenPhoto() }
+        updateCrimePhoto()
 
         crimeCameraButton.isEnabled = canTakePhoto
         crimeCameraButton.setOnClickListener { startCameraForResult() }
@@ -175,7 +168,7 @@ class CrimeFragment : Fragment() {
                 }
             }
             REQUEST_PHOTO -> {
-                updatePhotoView()
+                updateCrimePhoto()
             }
         }
     }
@@ -201,12 +194,15 @@ class CrimeFragment : Fragment() {
     /**
      * Update the photo view after resizing it to the view size.
      */
-    private fun updatePhotoView() {
-        Log.d(TAG, "updatePhotoView: ${crimePhoto.width} x ${crimePhoto.height}")
-
+    private fun updateCrimePhoto() {
         if (photoFile != null && photoFile!!.exists()) {
-            val bitmap: Bitmap? = crimePhoto.getScaledBitmap(photoFile!!.path)
-            crimePhoto.setImageBitmap(bitmap)
+            with(crimePhoto) {
+                post {
+                    if (width > 0 && height > 0) {
+                        setScaledImageBitmap(photoFile!!, width, height)
+                    }
+                }
+            }
         } else {
             crimePhoto.setImageDrawable(null)
         }
@@ -287,11 +283,11 @@ class CrimeFragment : Fragment() {
         startActivityForResult(intent, REQUEST_PHOTO)
     }
 
-    private fun showZoomedInPhoto() {
-        Log.d(TAG, "startZoomedInPhoto: $photoFile")
-
-        // If the photo file exists, start the photo fragment.
-        photoFile?.let {
+    /**
+     * If the photo file exists, show a full-screen version of the photo.
+     */
+    private fun showFillScreenPhoto() {
+        if (photoFile != null && photoFile!!.exists()) {
             PhotoFragment.newInstance(photoFile!!)
                     .show(activity.supportFragmentManager, DIALOG_PHOTO)
         }

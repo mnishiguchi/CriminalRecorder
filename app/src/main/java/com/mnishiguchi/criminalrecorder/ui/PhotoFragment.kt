@@ -5,16 +5,13 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import android.support.v7.app.AlertDialog
-import android.util.Log
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.LinearLayout.LayoutParams.MATCH_PARENT
-import com.mnishiguchi.criminalrecorder.util.getScaledBitmap
+import com.mnishiguchi.criminalrecorder.util.scaleBitmapToWindow
 import org.jetbrains.anko.bundleOf
 import java.io.File
 
 /**
- * Created by masa on 7/7/17.
+ * A Dialog Fragment that shows a full-screen photo.
  */
 class PhotoFragment : DialogFragment() {
     private val TAG = javaClass.simpleName
@@ -24,9 +21,6 @@ class PhotoFragment : DialogFragment() {
 
         // Define how a hosting activity should create this fragment.
         fun newInstance(photoFile: File): PhotoFragment {
-
-            Log.d("PhotoFragment", photoFile.toString())
-
             return PhotoFragment().apply {
                 arguments = bundleOf(ARG_PHOTO_FILE to photoFile)
             }
@@ -35,15 +29,10 @@ class PhotoFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val photoFile = arguments.getSerializable(ARG_PHOTO_FILE) as File
-        val bitmap: Bitmap? = activity.getScaledBitmap(photoFile!!.path)
+        val scaledBitmap: Bitmap = activity.scaleBitmapToWindow(photoFile)
+        val imageView = ImageView(activity).apply { setImageBitmap(scaledBitmap) }
 
-        Log.d(TAG, "onCreateDialog: $photoFile")
-
-        val imageView = ImageView(activity).apply {
-            setImageBitmap(bitmap)
-        }
-
-        return AlertDialog.Builder(activity)
+        return AlertDialog.Builder(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
                 .setView(imageView)
                 .create()
     }
