@@ -19,6 +19,7 @@ fun Activity.getScaledBitmap(path: String): Bitmap {
  * Get an image data from a file and scale it down to fit the view size.
  */
 fun View.getScaledBitmap(path: String): Bitmap {
+    if (width == null || height == null) throw IllegalStateException("The dimensions of the view are not available yet")
     return getScaledBitmap(path, width, height)
 }
 

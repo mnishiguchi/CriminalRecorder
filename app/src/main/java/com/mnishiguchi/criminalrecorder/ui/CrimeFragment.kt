@@ -45,6 +45,7 @@ class CrimeFragment : Fragment() {
     companion object {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
         private val DIALOG_DATE = "DIALOG_DATE"
+        private val DIALOG_PHOTO = "DIALOG_PHOTO"
         private val REQUEST_DATE = 0
         private val REQUEST_CONTACT = 1
         private val REQUEST_PHOTO = 2
@@ -94,6 +95,7 @@ class CrimeFragment : Fragment() {
                 crimePhoto.viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
         })
+        crimePhoto.setOnClickListener { showZoomedInPhoto() }
 
         crimeCameraButton.isEnabled = canTakePhoto
         crimeCameraButton.setOnClickListener { startCameraForResult() }
@@ -107,6 +109,7 @@ class CrimeFragment : Fragment() {
 
             override fun afterTextChanged(s: Editable?) {}
         })
+        crimeTitle.clearFocus()
 
         crimeDate.setOnClickListener { startDatePickerForResult() }
         updateDateText()
@@ -271,16 +274,27 @@ class CrimeFragment : Fragment() {
     }
 
     private fun startDatePickerForResult(): Unit {
-        val dialog = DatePickerFragment.newInstance(Date(crime.date))
-        dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
-        dialog.show(fm, DIALOG_DATE)
+        DatePickerFragment.newInstance(Date(crime.date)).apply {
+            setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
+        }.show(fm, DIALOG_DATE)
     }
 
     private fun startCameraForResult(): Unit {
         if (!canTakePhoto) return
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
+        }
         startActivityForResult(intent, REQUEST_PHOTO)
+    }
+
+    private fun showZoomedInPhoto() {
+        Log.d(TAG, "startZoomedInPhoto: $photoFile")
+
+        // If the photo file exists, start the photo fragment.
+        photoFile?.let {
+            PhotoFragment.newInstance(photoFile!!)
+                    .show(activity.supportFragmentManager, DIALOG_PHOTO)
+        }
     }
 
     /**
