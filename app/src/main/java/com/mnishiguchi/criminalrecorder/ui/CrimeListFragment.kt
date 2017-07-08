@@ -1,8 +1,11 @@
 package com.mnishiguchi.criminalrecorder.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -15,6 +18,8 @@ import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import kotlinx.android.synthetic.main.fragment_crime_list.*
 import kotlinx.android.synthetic.main.list_item_crime.view.*
 
+// Global state for this file.
+var currentPosition = -1
 
 /**
  * Use the [CrimeListFragment.newInstance] factory method to create an instance of this fragment.
@@ -22,7 +27,17 @@ import kotlinx.android.synthetic.main.list_item_crime.view.*
 class CrimeListFragment : Fragment() {
     private val TAG = javaClass.simpleName
 
-    lateinit private var dateFormat: java.text.DateFormat
+    private var callback: CrimeListFragment.Callback? = null
+
+    /**
+     * Required interface for hosting activities.
+     */
+    interface Callback {
+        fun onCrimeListItemSelected(crime: Crime)
+    }
+
+    private val layoutManager: LinearLayoutManager by lazy { LinearLayoutManager(activity) }
+    private val dateFormat: java.text.DateFormat by lazy { this.context.mediumDateFormat() }
     private var isSubtitleVisible = false
 
     companion object {
@@ -34,6 +49,11 @@ class CrimeListFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        callback = activity as Callback
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -43,9 +63,6 @@ class CrimeListFragment : Fragment() {
 
         // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
         setHasOptionsMenu(true)
-
-        // Create a DateFormat instance.
-        dateFormat = this.context.mediumDateFormat()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -58,11 +75,29 @@ class CrimeListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // LayoutManager handles the positioning of items and defines the scrolling behavior.
-        crimeList.layoutManager = LinearLayoutManager(activity)
+        crimeList.layoutManager = layoutManager
 
-        emptyListButton.setOnClickListener { startBlankCrime() }
+        setEmptyView()
+        setDivider()
+        updateUI()
+    }
+
+    // In general, onResume is the safest place to take actions to update a fragment view.
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
 
         updateUI()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        callback = null
     }
 
     // Inflate the menu view. Make sure that we specify setHasOptionsMenu(true) in onCreate.
@@ -83,7 +118,9 @@ class CrimeListFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_new_crime -> {
-                startBlankCrime()
+                val crime = CrimeLab.create()
+                callback?.onCrimeListItemSelected(crime)
+                updateUI()
                 return true // Indicate that no further processing is necessary.
             }
             R.id.menu_item_toggle_subtitle -> {
@@ -99,46 +136,18 @@ class CrimeListFragment : Fragment() {
         }
     }
 
-    // In general, onResume is the safest place to take actions to save a fragment view.
-    override fun onResume() {
-        Log.d(TAG, "onResume")
-        super.onResume()
-
-        updateUI()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
-    }
-
-    // Create a blank crime and open an editor (CrimeFragment).
-    private fun startBlankCrime() {
-        val newCrime = CrimeLab.new()
-        val intent = CrimePagerActivity.newIntent(activity, newCrime.uuid)
-        startActivity(intent)
-    }
-
-    // Update subtitle based on its visibility status and current crime counts.
-    private fun updateSubtitle() {
-        // Toggle the subtitle.
-        (activity as AppCompatActivity).supportActionBar?.subtitle =
-                if (isSubtitleVisible) {
-                    val crimeCount = CrimeLab.size
-                    resources.getQuantityString(R.plurals.quantity_crime_count, crimeCount, crimeCount)
-                } else null
-    }
-
-    private fun updateUI() {
+    /**
+     * Update the uI based on the latest data set.
+     */
+    fun updateUI() {
         val newDataSet = CrimeLab.crimes()
 
         if (crimeList.adapter == null) {
-            crimeList.adapter = CrimeListAdapter(newDataSet, dateFormat) {
-                // on-click callback
-                it, _ ->
-                val intent = CrimePagerActivity.newIntent(activity, it.uuid)
-                startActivity(intent)
+            val itemClick: (Crime, Int) -> Unit = { crime: Crime, position: Int ->
+                callback?.onCrimeListItemSelected(crime)
+                currentPosition = position
             }
+            crimeList.adapter = CrimeListAdapter(newDataSet, dateFormat, itemClick)
         } else {
             // Reload the list.
             crimeList.adapter.notifyDataSetChanged()
@@ -156,47 +165,87 @@ class CrimeListFragment : Fragment() {
         updateSubtitle()
     }
 
-    /**
-     * An adapter for CrimeListFragment.
-     */
-    private class CrimeListAdapter(val crimes: List<Crime>,
-                                   val dateFormat: java.text.DateFormat,
-                                   val itemClick: (crime: Crime, position: Int) -> Unit)
-        : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = parent.inflate(R.layout.list_item_crime)
-            return ViewHolder(view, dateFormat, itemClick)
+    private fun setEmptyView() {
+        emptyListButton.setOnClickListener {
+            val crime = CrimeLab.create()
+            callback?.onCrimeListItemSelected(crime)
         }
+    }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bindCrime(crimes[position], position)
-        }
+    private fun setDivider() {
+        val dividerItemDecoration = DividerItemDecoration(crimeList.context, layoutManager.orientation)
+        crimeList.addItemDecoration(dividerItemDecoration)
+    }
 
-        override fun getItemCount(): Int = crimes.size
+    // Update subtitle based on its visibility status and current crime counts.
+    private fun updateSubtitle() {
+        // Toggle the subtitle.
+        (activity as AppCompatActivity).supportActionBar?.subtitle =
+                if (isSubtitleVisible) {
+                    val crimeCount = CrimeLab.size
+                    resources.getQuantityString(R.plurals.quantity_crime_count, crimeCount, crimeCount)
+                } else null
+    }
+}
 
+/**
+ * An adapter for CrimeListFragment.
+ */
+class CrimeListAdapter(val crimes: List<Crime>,
+                       val dateFormat: java.text.DateFormat,
+                       val itemClick: (crime: Crime, position: Int) -> Unit)
+    : RecyclerView.Adapter<CrimeListViewHolder>() {
 
-        /**
-         * A view holder for CrimeListAdapter.
-         * https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
-         */
-        class ViewHolder(view: View,
-                         val dateFormat: java.text.DateFormat,
-                         val itemClick: (crime: Crime, position: Int) -> Unit)
-            : RecyclerView.ViewHolder(view) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeListViewHolder {
+        val view = parent.inflate(R.layout.list_item_crime)
+        return CrimeListViewHolder(view, dateFormat, itemClick)
+    }
 
-            fun bindCrime(crime: Crime, position: Int) = with(itemView) {
-                listItemCrimeTitle.text =
-                        if (crime.title.trim().isEmpty())
-                            resources.getString(android.R.string.unknownName)
-                        else crime.title
-                listItemCrimeDate.text = dateFormat.format(crime.date)
-                listItemCrimeIsSolved.isChecked = crime.isSolved
-                listItemCrimeIsSolved.setOnCheckedChangeListener {
-                    _, isChecked ->
-                    crime.isSolved = isChecked
+    override fun onBindViewHolder(holder: CrimeListViewHolder, position: Int) {
+        holder.bindCrime(crimes[position], position)
+    }
+
+    override fun getItemCount(): Int = crimes.size
+}
+
+/**
+ * A view holder for CrimeListAdapter.
+ * https://developer.android.com/reference/android/support/v7/widget/RecyclerView.ViewHolder.html
+ */
+class CrimeListViewHolder(view: View,
+                          val dateFormat: java.text.DateFormat,
+                          val itemClick: (crime: Crime, position: Int) -> Unit)
+    : RecyclerView.ViewHolder(view) {
+
+    fun bindCrime(crime: Crime, position: Int) {
+        with(itemView) {
+            val backgroundColor =
+                    if (position == currentPosition)
+                        ResourcesCompat.getColor(resources, android.R.color.holo_blue_bright, App.instance.theme)
+                    else
+                        ResourcesCompat.getColor(resources, android.R.color.transparent, App.instance.theme)
+            setBackgroundColor(backgroundColor)
+
+            listItemCrimeTitle.text =
+                    if (crime.title.isBlank())
+                        resources.getString(android.R.string.unknownName)
+                    else
+                        crime.title
+
+            listItemCrimeDate.text = dateFormat.format(crime.date)
+
+            // Show / hide the check icon according to the crime's state.
+            with(listItemCrimeIsSolved) {
+                if (crime.isSolved) {
+                    setBackgroundResource(R.drawable.ic_check_black_24dp)
+                    visibility = View.VISIBLE
+                } else {
+                    visibility = View.GONE
                 }
-                setOnClickListener { itemClick(crime, position) }
+            }
+
+            setOnClickListener {
+                itemClick(crime, position)
             }
         }
     }

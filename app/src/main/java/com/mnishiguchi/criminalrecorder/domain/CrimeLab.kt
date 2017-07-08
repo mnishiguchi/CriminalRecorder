@@ -52,12 +52,12 @@ object CrimeLab {
     /**
      * Create a new blank crime.
      */
-    fun new(): Crime = dao.newRecord().apply { inMemoryCrimes.add(this) }
+    fun create(): Crime = dao.newRecord().apply { inMemoryCrimes.add(this) }
 
     /**
      * Save the changes of an existing record.
      */
-    fun save(crime: Crime): Unit {
+    fun update(crime: Crime): Unit {
         inMemoryCrimes.forEachIndexed { index, it ->
             if (it._id == crime._id) {
                 inMemoryCrimes[index] = crime

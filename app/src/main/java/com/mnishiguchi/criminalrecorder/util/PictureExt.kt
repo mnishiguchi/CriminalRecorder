@@ -10,7 +10,7 @@ import java.io.File
 /**
  * Get an image data from a file and scale it down to fit the current window size.
  */
-fun Activity.scaleBitmapToWindow(file: File): Bitmap {
+fun Activity.scaleBitmapToWindow(file: File): Bitmap? {
     with(Point()) {
         windowManager.defaultDisplay.getSize(this)
         return getScaledBitmap(file, this.x, this.y)
@@ -21,7 +21,7 @@ fun Activity.scaleBitmapToWindow(file: File): Bitmap {
  * Get an image data from a file, scale it down to fit the specified dimensions, and set that
  * scaled image on the image view.
  */
-fun ImageView.setScaledImageBitmap(file: File, width: Int, height: Int): Bitmap {
+fun ImageView.setScaledImageBitmap(file: File, width: Int, height: Int): Bitmap? {
     val scaledBitmap = getScaledBitmap(file, width, height)
     setImageBitmap(scaledBitmap)
     return scaledBitmap
@@ -30,7 +30,7 @@ fun ImageView.setScaledImageBitmap(file: File, width: Int, height: Int): Bitmap 
 /**
  * Get an image data from a file and scale it down to fit given dimensions.
  */
-private fun getScaledBitmap(file: File, destWidth: Int, destHeight: Int): Bitmap {
+private fun getScaledBitmap(file: File, destWidth: Int, destHeight: Int): Bitmap? {
     // Read in the dimensions of the image on disk.
     var srcWidth: Float = 0.0F
     var srcHeight: Float = 0.0F

@@ -59,11 +59,9 @@ class DatePickerFragment : DialogFragment() {
                 .setTitle(R.string.date_picker_title)
                 .setView(datePicker)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok) {
-                    _, _ ->
-                    val date = GregorianCalendar(datePicker.year, datePicker.month, datePicker.dayOfMonth).time
-                    Log.d(TAG, date.toString())
-                    sendResult(Activity.RESULT_OK, date)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    val date: Date = GregorianCalendar(datePicker.year, datePicker.month, datePicker.dayOfMonth).time
+                    sendResult(date)
                 }
                 .create()
     }
@@ -71,20 +69,15 @@ class DatePickerFragment : DialogFragment() {
     /**
      * Send a result back to a target fragment (requester).
      */
-    private fun sendResult(resultCode: Int, date: Date) {
-        Log.d(TAG, "sendResult")
+    private fun sendResult(date: Date) {
+        Log.d(TAG, "sendResult: targetFragment: $targetFragment, date: $date")
 
-        if (targetFragment == null) {
-            Log.d(TAG, "sendResult: targetFragment: null")
-            return
-        }
+        if (targetFragment == null) return
 
-        val intent = Intent().apply {
-            putExtra(EXTRA_DATE, date)
-        }
+        val intent = Intent().apply { putExtra(EXTRA_DATE, date) }
 
         // We need to directly call onActivityResult because the ActivityManager is not present in
         // the process of communicating between a fragment and a dialog.
-        targetFragment.onActivityResult(targetRequestCode, resultCode, intent)
+        targetFragment.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
     }
 }

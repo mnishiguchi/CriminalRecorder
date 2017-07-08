@@ -1,6 +1,7 @@
 package com.mnishiguchi.criminalrecorder.ui;
 
 import android.os.Bundle
+import android.support.annotation.LayoutRes
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v7.app.AppCompatActivity
@@ -15,6 +16,15 @@ import com.mnishiguchi.criminalrecorder.R
  * https://developer.android.com/reference/android/support/v7/app/AppCompatActivity.html
  */
 abstract class SingleFragmentActivity : AppCompatActivity() {
+    companion object {
+        val DEFAULT_LAYOUT_RES: Int = R.layout.activity_one_pane
+    }
+
+    /**
+     * A subclass can choose to overrider this function to return a layout other than the default.
+     */
+    @LayoutRes
+    protected open fun getLayoutResId(): Int = DEFAULT_LAYOUT_RES
 
     /**
      * Subclasses of [SingleFragmentActivity] must implement this method.
@@ -24,7 +34,7 @@ abstract class SingleFragmentActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_single_fragment)
+        setContentView(getLayoutResId())
 
         // Use supportFragmentManager because we are using the support library fragments.
         val fm = supportFragmentManager
@@ -40,13 +50,13 @@ abstract class SingleFragmentActivity : AppCompatActivity() {
 
     // Find a fragment instance in a fragment manager's list.
     private fun findFragment(fm: FragmentManager): Fragment? {
-        return fm.findFragmentById(R.id.singleFragmentContainer)
+        return fm.findFragmentById(R.id.fragment_container)
     }
 
     // Create a new fragment instance and register it to a fragment manager.
     private fun registerFragment(fm: FragmentManager) {
         fm.beginTransaction()
-                .add(R.id.singleFragmentContainer, createFragment())
+                .add(R.id.fragment_container, createFragment())
                 .commit()
     }
 }

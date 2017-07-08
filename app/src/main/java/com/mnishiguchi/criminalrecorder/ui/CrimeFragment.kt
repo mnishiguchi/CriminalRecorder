@@ -1,6 +1,7 @@
 package com.mnishiguchi.criminalrecorder.ui
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -33,6 +34,16 @@ import java.util.*
 class CrimeFragment : Fragment() {
     private val TAG = javaClass.simpleName
 
+    private var callback: CrimeFragment.Callback? = null
+
+    /**
+     * Required interface for hosting activities.
+     */
+    interface Callback {
+        fun onCrimeUpdated(crime: Crime)
+        fun onCrimeDeleted(crime: Crime)
+    }
+
     lateinit private var crime: Crime
     lateinit private var df: java.text.DateFormat
 
@@ -55,6 +66,11 @@ class CrimeFragment : Fragment() {
                 arguments = bundleOf(ARG_CRIME_ID to crimeId)
             }
         }
+    }
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        callback = activity as Callback?
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,6 +114,7 @@ class CrimeFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 crime.title = s.toString()
+                notifyCrimeUpdated()
             }
 
             override fun afterTextChanged(s: Editable?) {}
@@ -108,7 +125,10 @@ class CrimeFragment : Fragment() {
         updateDateText()
 
         crimeSolvedButton.isChecked = crime.isSolved
-        crimeSolvedButton.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
+        crimeSolvedButton.setOnCheckedChangeListener { _, isChecked ->
+            crime.isSolved = isChecked
+            notifyCrimeUpdated()
+        }
 
         crimeReportButton.setOnClickListener { sendCrimeReport() }
 
@@ -132,10 +152,11 @@ class CrimeFragment : Fragment() {
         when (item.itemId) {
             R.id.menu_item_delete_crime -> {
                 AlertDialog.Builder(context)
+                        .setTitle("Deleting a crime \"${crime.title}\" (_id: ${crime._id})")
                         .setMessage("Are you sure?")
                         .setPositiveButton("Yes") { _, _ ->
                             CrimeLab.remove(crime)
-                            activity.finish()
+                            callback?.onCrimeDeleted(crime)
                         }
                         .setNegativeButton("No") { _, _ -> }
                         .show()
@@ -159,16 +180,19 @@ class CrimeFragment : Fragment() {
                 data?.let {
                     crime.date = DatePickerFragment.dateResult(data).time // In-memory
                     updateDateText() // UI
+                    notifyCrimeUpdated()
                 }
             }
             REQUEST_CONTACT -> {
                 data?.let {
                     crime.suspect = getSuspectNameFromContactList(data) // In-memory
                     crimeSuspectButton.text = crime.suspect // UI
+                    notifyCrimeUpdated()
                 }
             }
             REQUEST_PHOTO -> {
                 updateCrimePhoto()
+                notifyCrimeUpdated()
             }
         }
     }
@@ -181,7 +205,20 @@ class CrimeFragment : Fragment() {
     override fun onPause() {
         Log.d(TAG, "onResume: _id: ${crime._id}")
         super.onPause()
-        CrimeLab.save(crime)
+        notifyCrimeUpdated()
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        callback = null
+    }
+
+    /**
+     * Update the crime record and notify the hosting activity.
+     */
+    private fun notifyCrimeUpdated() {
+        CrimeLab.update(crime)
+        callback?.onCrimeUpdated(crime)
     }
 
     /**
@@ -270,16 +307,15 @@ class CrimeFragment : Fragment() {
     }
 
     private fun startDatePickerForResult(): Unit {
-        DatePickerFragment.newInstance(Date(crime.date)).apply {
-            setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
-        }.show(fm, DIALOG_DATE)
+        val dialog = DatePickerFragment.newInstance(Date(crime.date))
+        dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
+        dialog.show(fm, DIALOG_DATE)
     }
 
     private fun startCameraForResult(): Unit {
         if (!canTakePhoto) return
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
-        }
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
         startActivityForResult(intent, REQUEST_PHOTO)
     }
 
