@@ -1,6 +1,8 @@
 package com.mnishiguchi.criminalrecorder.ui
 
 import android.app.Application
+import com.mnishiguchi.criminalrecorder.data.AppDatabase
+import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 
 /**
  * An application singleton that allows us to have an easier access to the application context.
@@ -10,6 +12,8 @@ class App : Application() {
     companion object {
         lateinit var instance: App
             private set
+        val database: AppDatabase by lazy { AppDatabase.createPersistentDatabase(instance) }
+        val mediumDateFormat: java.text.DateFormat by lazy { instance.mediumDateFormat() }
     }
 
     override fun onCreate() {

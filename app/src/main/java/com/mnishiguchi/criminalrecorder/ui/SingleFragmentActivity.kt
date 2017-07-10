@@ -1,5 +1,7 @@
 package com.mnishiguchi.criminalrecorder.ui;
 
+import android.arch.lifecycle.LifecycleRegistry
+import android.arch.lifecycle.LifecycleRegistryOwner
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -7,14 +9,16 @@ import android.support.v7.app.AppCompatActivity
 import com.mnishiguchi.criminalrecorder.R
 
 /**
- * A generic activity superclass for hosting a single fragment.
- * We subclass android.support.v7.app.AppCompatActivity, which is a subclass of
- * android.support.v4.app.FragmentActivity, so that we can use:
+ * We need to subclass a subclass of android.support.v4.app.FragmentActivity, so that we can use:
  *   + support-library fragments
  *   + cross-api-version toolbar
  * https://developer.android.com/reference/android/support/v7/app/AppCompatActivity.html
  */
-abstract class SingleFragmentActivity : AppCompatActivity() {
+abstract class SingleFragmentActivity : AppCompatActivity(), LifecycleRegistryOwner {
+
+    // https://developer.android.com/reference/android/arch/lifecycle/LifecycleRegistryOwner.html
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    override fun getLifecycle(): LifecycleRegistry = lifecycleRegistry
 
     /**
      * Subclasses of [SingleFragmentActivity] must implement this method.

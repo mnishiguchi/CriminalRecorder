@@ -1,113 +1,34 @@
 package com.mnishiguchi.criminalrecorder.data
 
-import android.util.Log
-import com.mnishiguchi.criminalrecorder.domain.Crime
-import com.mnishiguchi.criminalrecorder.util.byId
-import com.mnishiguchi.criminalrecorder.util.parseListWithMap
-import com.mnishiguchi.criminalrecorder.util.parseOptWithMap
-import com.mnishiguchi.criminalrecorder.util.toVarargArray
-import org.jetbrains.anko.db.*
-import java.util.*
+import android.arch.lifecycle.LiveData
+import android.arch.persistence.room.Dao
+import android.arch.persistence.room.Delete
+import android.arch.persistence.room.Insert
+import android.arch.persistence.room.OnConflictStrategy.REPLACE
+import android.arch.persistence.room.Query
 
-/**
- * https://github.com/Kotlin/anko/wiki/Anko-SQLite
- * https://github.com/Kotlin/anko/blob/master/anko/library/static/sqlite/src/Database.kt
- */
-class CrimeDao(val database: AppDatabase = AppDatabase,
-               val dataMapper: CrimeDataMapper = CrimeDataMapper) {
+@Dao
+interface CrimeDao {
 
-    private val TAG = javaClass.simpleName
-    private val t = AppDatabase.CrimeTable
+    /* Read operations */
 
-    /* Read-only operations */
+    @Query("SELECT * FROM crimes")
+    fun all(): LiveData<List<Crime>>
 
-    fun all(): List<Crime> {
-        val result = database.use {
-            select(t.TABLE_NAME)
-                    .parseListWithMap {
-                        val data = CrimeEntity(HashMap(it))
-                        dataMapper.toDomain(data)
-                    }
-        }
-        Log.d(TAG, "all: $result")
-        return result
-    }
+    @Query("SELECT * FROM crimes WHERE id = :arg0")
+    fun find(id: Int): LiveData<List<Crime>>
 
-    fun find(id: Int): Crime? {
-        val result = database.use {
-            select(t.TABLE_NAME).byId(id)
-                    .parseOptWithMap {
-                        val data = CrimeEntity(HashMap(it))
-                        dataMapper.toDomain(data)
-                    }
-        }
-        Log.d(TAG, "all: _id: $result")
-        return result
-    }
-
-    fun findByUUID(uuid: UUID): Crime? {
-        val result = database.use {
-            select(t.TABLE_NAME)
-                    .whereArgs("${t.UUID} = {uuid}", "uuid" to uuid)
-                    .parseOptWithMap {
-                        val data = CrimeEntity(HashMap(it))
-                        dataMapper.toDomain(data)
-                    }
-        }
-        Log.d(TAG, "findByUUID: $result")
-        return result
-    }
-
-    fun last(): Crime {
-        val result = database.use {
-            select(t.TABLE_NAME)
-                    .orderBy(t.ID, SqlOrderDirection.DESC)
-                    .limit(1)
-                    .parseOptWithMap {
-                        val data = CrimeEntity(HashMap(it))
-                        dataMapper.toDomain(data)
-                    }
-        }
-        Log.d(TAG, "last: $result")
-        return result!!
-    }
+    @Query("SELECT COUNT(*) FROM crimes")
+    fun count(): Long
 
     /* Write operations */
 
-    fun newRecord(): Crime {
-        insert(Crime())
-        return last()
-    }
+    @Insert(onConflict = REPLACE)
+    fun insert(crime: Crime): Long // Id
 
-    fun insert(crime: Crime): Long {
-        val vararg = dataMapper.fromDomain(crime).map
-                .apply { remove("_id") } // Ignore _id because duplicate id is not allowed.
-                .toVarargArray()
-        val result = database.use {
-            insert(t.TABLE_NAME, *vararg)
-        }
-        Log.d(TAG, "insert: _id: ${crime._id}, result: $result")
-        return result
-    }
+    @Delete
+    fun delete(crime: Crime): Int // Number of deleted rows
 
-    fun update(crime: Crime): Boolean {
-        val vararg = dataMapper.fromDomain(crime).map
-                .apply { remove("_id") } // Ignore _id because duplicate id is not allowed.
-                .toVarargArray()
-        val result = database.use {
-            update(t.TABLE_NAME, *vararg)
-                    .whereArgs("_id = {_id}", "_id" to crime._id)
-                    .exec()
-        } == 1
-        Log.d(TAG, "update: _id: ${crime._id}, result: $result")
-        return result
-    }
-
-    fun delete(crime: Crime): Boolean {
-        val result = database.use {
-            delete(t.TABLE_NAME, "_id = {_id}", "_id" to crime._id)
-        } == 1
-        Log.d(TAG, "delete: _id: ${crime._id}, result: $result")
-        return result
-    }
+    @Query("DELETE FROM crimes WHERE id = :arg0")
+    fun delete(id: Int): Int // Number of deleted rows
 }

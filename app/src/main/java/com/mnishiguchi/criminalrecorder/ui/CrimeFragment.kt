@@ -1,6 +1,7 @@
 package com.mnishiguchi.criminalrecorder.ui
 
 import android.app.Activity
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -9,18 +10,14 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
 import android.support.v4.app.ShareCompat
-import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import com.mnishiguchi.criminalrecorder.R
-import com.mnishiguchi.criminalrecorder.domain.Crime
-import com.mnishiguchi.criminalrecorder.domain.CrimeLab
-import com.mnishiguchi.criminalrecorder.util.mediumDateFormat
 import com.mnishiguchi.criminalrecorder.util.setScaledImageBitmap
+import com.mnishiguchi.criminalrecorder.viewmodel.CrimeVM
 import kotlinx.android.synthetic.main.fragment_crime.*
 import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
@@ -33,13 +30,11 @@ import java.util.*
 class CrimeFragment : Fragment() {
     private val TAG = javaClass.simpleName
 
-    lateinit private var crime: Crime
-    lateinit private var df: java.text.DateFormat
-
-    private val photoFile: File? by lazy { CrimeLab.photoFile(crime) } // Null if no external storage was found!!
+    private val vm: CrimeVM by lazy { ViewModelProviders.of(activity).get(CrimeVM::class.java) }
+    private val crimeId: Int by lazy { arguments.getSerializable(ARG_CRIME_ID) as Int }
+    private val photoFile: File? by lazy { vm.photoFileById(crimeId) } // Null if no external storage was found!!
     private val canTakePhoto: Boolean by lazy { photoFile != null && isCameraAvailable() }
     private val canUseContactList: Boolean by lazy { isContactListAvailable() }
-    private val fm: FragmentManager by lazy { activity.supportFragmentManager }
 
     companion object {
         private val ARG_CRIME_ID = "${CrimeFragment::class.java.canonicalName}.ARG_CRIME_ID"
@@ -50,7 +45,7 @@ class CrimeFragment : Fragment() {
         private val REQUEST_PHOTO = 2
 
         // Define how a hosting activity should create this fragment.
-        fun newInstance(crimeId: UUID): CrimeFragment {
+        fun newInstance(crimeId: Int): CrimeFragment {
             return CrimeFragment().apply {
                 arguments = bundleOf(ARG_CRIME_ID to crimeId)
             }
@@ -63,20 +58,14 @@ class CrimeFragment : Fragment() {
         // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
         setHasOptionsMenu(true)
 
-        // Find a crime in CrimeLab and store the ref.
-        val uuid = arguments.getSerializable(ARG_CRIME_ID) as UUID
-        crime = CrimeLab.crime(uuid) ?: throw Exception("Could not find a crime (uuid: $uuid)")
-
-        // Create a DateFormat instance.
-        df = this.context.mediumDateFormat()
-
-        Log.d(TAG, "photoFile: $photoFile")
-        Log.d(TAG, "canTakePhoto: $canTakePhoto")
-        Log.d(TAG, "canUseContactList: $canUseContactList")
+        // If crimes are not available something must be wrong.
+        if (vm.crimes.value == null) {
+            activity.supportFragmentManager.popBackStack()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(TAG, "onCreateView: _id: ${crime._id}")
+        Log.d(TAG, "onCreateView: id: ${crimeId}")
 
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_crime, container, false)
@@ -84,10 +73,12 @@ class CrimeFragment : Fragment() {
 
     // https://developer.android.com/reference/android/app/Fragment.html#onViewCreated(android.view.View, android.os.Bundle)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d(TAG, "onViewCreated: _id: ${crime._id}")
+        Log.d(TAG, "onViewCreated: id: ${crimeId}, photoFile: ${photoFile}")
         super.onViewCreated(view, savedInstanceState)
 
-        crimePhoto.setOnClickListener { showFillScreenPhoto() }
+        val crime = vm.crimeById(crimeId)
+
+        photoFile?.let { crimePhoto.setOnClickListener { showFillScreenPhoto() } }
         updateCrimePhoto()
 
         crimeCameraButton.isEnabled = canTakePhoto
@@ -108,7 +99,9 @@ class CrimeFragment : Fragment() {
         updateDateText()
 
         crimeSolvedButton.isChecked = crime.isSolved
-        crimeSolvedButton.setOnCheckedChangeListener { _, isChecked -> crime.isSolved = isChecked }
+        crimeSolvedButton.setOnCheckedChangeListener { _, isChecked ->
+            crime.isSolved = isChecked
+        }
 
         crimeReportButton.setOnClickListener { sendCrimeReport() }
 
@@ -131,14 +124,7 @@ class CrimeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_delete_crime -> {
-                AlertDialog.Builder(context)
-                        .setMessage("Are you sure?")
-                        .setPositiveButton("Yes") { _, _ ->
-                            CrimeLab.remove(crime)
-                            activity.finish()
-                        }
-                        .setNegativeButton("No") { _, _ -> }
-                        .show()
+                // Do something.
                 return true // Indicate that no further processing is necessary.
             }
             else -> return super.onOptionsItemSelected(item)
@@ -146,7 +132,9 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.d(TAG, "onActivityResult: _id: ${crime._id}")
+        Log.d(TAG, "onActivityResult: id: ${crimeId}")
+
+        val crime = vm.crimeById(crimeId)
 
         if (resultCode != Activity.RESULT_OK) {
             Log.d(TAG, "Result was not OK")
@@ -174,21 +162,23 @@ class CrimeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Log.d(TAG, "onResume: _id: ${crime._id}")
+        Log.d(TAG, "onResume: id: ${crimeId}")
         super.onResume()
     }
 
     override fun onPause() {
-        Log.d(TAG, "onResume: _id: ${crime._id}")
+        Log.d(TAG, "onResume: id: ${crimeId}")
         super.onPause()
-        CrimeLab.save(crime)
+        val crime = vm.crimeById(crimeId)
+        vm.update(crime) // Persist
     }
 
     /**
      * Update the date text based on a crime stored in the CrimeLab.
      */
     private fun updateDateText(): Unit {
-        crimeDate.text = df.format(crime.date)
+        val crime = vm.crimeById(crimeId)
+        crimeDate.text = App.mediumDateFormat.format(crime.date)
     }
 
     /**
@@ -251,7 +241,9 @@ class CrimeFragment : Fragment() {
      * Generate a text for a crime report.
      */
     private fun getCrimeReportText(): String {
-        val dateString = getString(R.string.crime_report_date, df.format(crime.date))
+        val crime = vm.crimeById(crimeId)
+
+        val dateString = getString(R.string.crime_report_date, App.mediumDateFormat.format(crime.date))
 
         val solvedString = if (crime.isSolved) {
             getString(R.string.crime_report_solved)
@@ -270,16 +262,17 @@ class CrimeFragment : Fragment() {
     }
 
     private fun startDatePickerForResult(): Unit {
-        DatePickerFragment.newInstance(Date(crime.date)).apply {
-            setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
-        }.show(fm, DIALOG_DATE)
+        val crime = vm.crimeById(crimeId)
+
+        val dialog = DatePickerFragment.newInstance(Date(crime.date))
+        dialog.setTargetFragment(this, REQUEST_DATE) // Similar to startActivityForResult
+        dialog.show(activity.supportFragmentManager, DIALOG_DATE)
     }
 
     private fun startCameraForResult(): Unit {
         if (!canTakePhoto) return
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
-        }
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile))
         startActivityForResult(intent, REQUEST_PHOTO)
     }
 

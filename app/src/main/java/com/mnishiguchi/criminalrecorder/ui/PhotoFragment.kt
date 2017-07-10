@@ -29,9 +29,13 @@ class PhotoFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val photoFile = arguments.getSerializable(ARG_PHOTO_FILE) as File
-        val scaledBitmap: Bitmap = activity.scaleBitmapToWindow(photoFile)
-        val imageView = ImageView(activity).apply { setImageBitmap(scaledBitmap) }
-
+        val scaledBitmap: Bitmap? = activity.scaleBitmapToWindow(photoFile)
+        val imageView =
+                if (scaledBitmap == null) {
+                    ImageView(activity).apply { setImageDrawable(null) }
+                } else {
+                    ImageView(activity).apply { setImageBitmap(scaledBitmap) }
+                }
         return AlertDialog.Builder(activity, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
                 .setView(imageView)
                 .create()
