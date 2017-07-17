@@ -1,6 +1,7 @@
 package com.mnishiguchi.criminalrecorder.viewmodel
 
 import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.os.Environment
 import com.mnishiguchi.criminalrecorder.data.Crime
@@ -19,10 +20,20 @@ class CrimeVM(val dao: CrimeDao = App.database.crimeDao()) : ViewModel() {
     /* ==> Data store */
 
     val crimes: LiveData<List<Crime>> = dao.all()
+    private val selectedCrimeId = MutableLiveData<Int>()
+
+    /* ==> Selected crime */
+
+    fun selectCrime(id: Int) {
+        selectedCrimeId.value = id
+    }
+
+    fun getSelectedCrime(): LiveData<Int> = selectedCrimeId
 
     /* ==> Read operations */
 
-    fun crimeById(id: Int): Crime = crimes.value?.find { it.id == id } as Crime
+    // If a crime does not exist in the data store, return a non-persisted blank crime.
+    fun crimeById(id: Int): Crime = crimes.value?.find { it.id == id } ?: Crime()
 
     fun indexById(crimeId: Int): Int {
         return crimes.value?.indexOfFirst { it.id == crimeId } ?: -1
@@ -44,11 +55,11 @@ class CrimeVM(val dao: CrimeDao = App.database.crimeDao()) : ViewModel() {
         }
     }
 
-    fun create(onCreate: (id: Long) -> Unit): Crime = Crime().apply {
+    fun create(onCreate: (id: Int) -> Unit): Crime = Crime().apply {
         val crime = this
         doAsync {
             val id: Long = dao.insert(crime)
-            onCreate(id)
+            uiThread { onCreate(id.toInt()) }
         }
     }
 
@@ -72,25 +83,21 @@ class CrimeVM(val dao: CrimeDao = App.database.crimeDao()) : ViewModel() {
 
     fun destroy(crime: Crime, onDestroy: (Int) -> Unit): Unit {
         doAsync {
-            crimes.value?.let {
-                val count = dao.delete(crime)
-                uiThread { onDestroy(count) }
-            }
+            val count = dao.delete(crime)
+            uiThread { onDestroy(count) }
         }
     }
 
     fun destroy(id: Int): Unit {
         doAsync {
-            crimes.value?.let { dao.delete(id) }
+            dao.delete(id)
         }
     }
 
     fun destroy(id: Int, onDestroy: (Int) -> Unit): Unit {
         doAsync {
-            crimes.value?.let {
-                val count = dao.delete(id)
-                uiThread { onDestroy(count) }
-            }
+            val count = dao.delete(id)
+            uiThread { onDestroy(count) }
         }
     }
 

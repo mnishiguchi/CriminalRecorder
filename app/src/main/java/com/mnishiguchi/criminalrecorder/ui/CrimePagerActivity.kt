@@ -72,6 +72,8 @@ class CrimePagerActivity : AppCompatActivity(), LifecycleRegistryOwner {
                 // Set initial pager item based on the id provided by the previous activity.
                 crimePager.currentItem = vm.indexById(crimeId)
 
+                Log.d(TAG, "crimePager.currentItem : ${crimePager.currentItem}")
+
                 // Unsubscribe the data since we are done with setting up the pager.
                 vm.crimes.removeObservers(this as LifecycleOwner)
             }

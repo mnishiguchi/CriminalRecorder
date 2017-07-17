@@ -11,6 +11,7 @@ import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.support.v4.app.Fragment
 import android.support.v4.app.ShareCompat
+import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -21,6 +22,7 @@ import com.mnishiguchi.criminalrecorder.viewmodel.CrimeVM
 import kotlinx.android.synthetic.main.fragment_crime.*
 import kotlinx.android.synthetic.main.view_camera_and_title.*
 import org.jetbrains.anko.bundleOf
+import org.jetbrains.anko.support.v4.toast
 import java.io.File
 import java.util.*
 
@@ -91,7 +93,9 @@ class CrimeFragment : Fragment() {
                 crime.title = s.toString()
             }
 
-            override fun afterTextChanged(s: Editable?) {}
+            override fun afterTextChanged(s: Editable?) {
+                vm.update(crime)
+            }
         })
         crimeTitle.clearFocus()
 
@@ -101,6 +105,7 @@ class CrimeFragment : Fragment() {
         crimeSolvedButton.isChecked = crime.isSolved
         crimeSolvedButton.setOnCheckedChangeListener { _, isChecked ->
             crime.isSolved = isChecked
+            vm.update(crime)
         }
 
         crimeReportButton.setOnClickListener { sendCrimeReport() }
@@ -124,7 +129,21 @@ class CrimeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_delete_crime -> {
-                // Do something.
+                val crime = vm.crimeById(crimeId)
+                AlertDialog.Builder(context)
+                        .setTitle("Deleting ${crime.title} (id: ${crime.id})")
+                        .setMessage("Are you sure?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            vm.destroy(crime) {
+                                toast("Deleted ${crime.title}")
+                                activity.supportFragmentManager
+                                        .beginTransaction()
+                                        .detach(this)
+                                        .commit()
+                            }
+                        }
+                        .setNegativeButton("No") { _, _ -> }
+                        .show()
                 return true // Indicate that no further processing is necessary.
             }
             else -> return super.onOptionsItemSelected(item)
@@ -141,18 +160,19 @@ class CrimeFragment : Fragment() {
             return
         }
 
-        // Make sure that we update both in-memory representaion and UI.
         when (requestCode) {
             REQUEST_DATE -> {
                 data?.let {
-                    crime.date = DatePickerFragment.dateResult(data).time // In-memory
+                    crime.date = DatePickerFragment.dateResult(data).time
                     updateDateText() // UI
+                    vm.update(crime) // VM
                 }
             }
             REQUEST_CONTACT -> {
                 data?.let {
-                    crime.suspect = getSuspectNameFromContactList(data) // In-memory
+                    crime.suspect = getSuspectNameFromContactList(data)
                     crimeSuspectButton.text = crime.suspect // UI
+                    vm.update(crime) // VM
                 }
             }
             REQUEST_PHOTO -> {
@@ -169,8 +189,6 @@ class CrimeFragment : Fragment() {
     override fun onPause() {
         Log.d(TAG, "onResume: id: ${crimeId}")
         super.onPause()
-        val crime = vm.crimeById(crimeId)
-        vm.update(crime) // Persist
     }
 
     /**

@@ -60,24 +60,20 @@ class CrimeListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         this.adapter = CrimeListAdapter(
-                onClick = { clickedCrime ->
-                    val intent = CrimePagerActivity.newIntent(activity, clickedCrime.id)
-                    startActivity(intent)
-                },
+                onClick = { clickedCrime -> vm.selectCrime(clickedCrime.id) },
                 onLongClick = { clickedCrime ->
                     AlertDialog.Builder(context)
                             .setTitle("Deleting ${clickedCrime.title} (id: ${clickedCrime.id})")
                             .setMessage("Are you sure?")
                             .setPositiveButton("Yes") { _, _ ->
-                                vm.destroy(clickedCrime) { count ->
+                                vm.destroy(clickedCrime) { _ ->
                                     toast("Deleted ${clickedCrime.title}")
                                 }
                             }
                             .setNegativeButton("No") { _, _ -> }
                             .show()
                     true
-                },
-                onCheckedChange = { changedCrime -> vm.update(changedCrime) }
+                }
         )
 
         crimeList.adapter = adapter
@@ -92,13 +88,14 @@ class CrimeListFragment : Fragment() {
             }
         })
 
-        emptyListButton.setOnClickListener { startBlankCrime() }
-        setDivider()
+        setListItemDivider()
 
-        fab.setOnClickListener { view -> startBlankCrime() }
+        fab.setOnClickListener {
+            vm.create { id -> vm.selectCrime(id) }
+        }
     }
 
-    private fun setDivider() {
+    private fun setListItemDivider() {
         DividerItemDecoration(crimeList.context, LinearLayoutManager(activity).orientation).apply {
             crimeList.addItemDecoration(this)
         }
@@ -122,7 +119,7 @@ class CrimeListFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_item_new_crime -> {
-                startBlankCrime()
+                vm.create { id -> vm.selectCrime(id) }
                 return true // Indicate that no further processing is necessary.
             }
             R.id.menu_item_toggle_subtitle -> {
@@ -147,19 +144,6 @@ class CrimeListFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(SAVED_IS_SUBTITLE_VISIBLE, isSubtitleVisible)
-    }
-
-    /**
-     * Create a blank crime and open an editor (CrimeFragment).
-     */
-    private fun startBlankCrime() {
-        // Maybe in the future, use shared vm for current id.
-        vm.create { id ->
-            Log.d(TAG, "id: $id")
-
-            val intent = CrimePagerActivity.newIntent(activity, id.toInt())
-            startActivity(intent)
-        }
     }
 
     /**
@@ -192,8 +176,7 @@ class CrimeListFragment : Fragment() {
      */
     class CrimeListAdapter(var crimes: List<Crime> = emptyList(),
                            val onClick: (crime: Crime) -> Unit,
-                           val onLongClick: (crime: Crime) -> Boolean,
-                           val onCheckedChange: (crime: Crime) -> Unit
+                           val onLongClick: (crime: Crime) -> Boolean
     ) : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -202,7 +185,7 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(crimes[position], onClick, onLongClick, onCheckedChange)
+            holder.bind(crimes[position], onClick, onLongClick)
         }
 
         override fun getItemCount(): Int = crimes.size
@@ -220,19 +203,19 @@ class CrimeListFragment : Fragment() {
 
             fun bind(crime: Crime,
                      onClick: (crime: Crime) -> Unit,
-                     onLongClick: (crime: Crime) -> Boolean,
-                     onCheckedChange: (crime: Crime) -> Unit
+                     onLongClick: (crime: Crime) -> Boolean
             ) = with(itemView) {
-                listItemCrimeTitle.text =
-                        if (crime.title.trim().isEmpty())
-                            resources.getString(android.R.string.unknownName)
-                        else crime.title
+
+                val unknownName = resources.getString(android.R.string.unknownName)
+                listItemCrimeTitle.text = if (crime.title.isBlank()) unknownName else crime.title
+
                 listItemCrimeDate.text = App.mediumDateFormat.format(crime.date)
-                listItemCrimeIsSolved.isChecked = crime.isSolved
-                listItemCrimeIsSolved.setOnCheckedChangeListener { _, isChecked ->
-                    crime.isSolved = isChecked
-                    onCheckedChange(crime)
+
+                with(listItemCrimeIsSolved) {
+                    setBackgroundResource(R.drawable.ic_check_black_24dp)
+                    visibility = if (crime.isSolved) View.VISIBLE else View.GONE
                 }
+
                 setOnClickListener { onClick(crime) }
                 setOnLongClickListener { onLongClick(crime) }
             }

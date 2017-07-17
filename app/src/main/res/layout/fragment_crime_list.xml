@@ -26,13 +26,6 @@
             android:layout_height="wrap_content"
             android:text="@string/no_data_available"
             app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
-            android:id="@+id/emptyListButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/new_crime"
-            app:layout_constraintEnd_toEndOf="parent" />
     </android.support.constraint.ConstraintLayout>
 
     <!-- FAB -->
