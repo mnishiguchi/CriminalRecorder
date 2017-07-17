@@ -94,6 +94,8 @@ class CrimeListFragment : Fragment() {
 
         emptyListButton.setOnClickListener { startBlankCrime() }
         setDivider()
+
+        fab.setOnClickListener { view -> startBlankCrime() }
     }
 
     private fun setDivider() {
