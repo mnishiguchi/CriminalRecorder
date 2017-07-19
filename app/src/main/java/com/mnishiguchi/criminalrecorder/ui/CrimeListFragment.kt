@@ -3,6 +3,7 @@ package com.mnishiguchi.criminalrecorder.ui
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
@@ -48,6 +49,13 @@ class CrimeListFragment : Fragment() {
 
         // Tell the FragmentManager that this fragment need its onCreateOptionsMenu to be called.
         setHasOptionsMenu(true)
+
+        vm.getSelectedCrime().observe(activity as LifecycleOwner, Observer<Int> {
+            it?.let {
+                adapter.selectedCrimeId = it
+                adapter.notifyDataSetChanged()
+            }
+        })
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -178,6 +186,9 @@ class CrimeListFragment : Fragment() {
                            val onClick: (crime: Crime) -> Unit,
                            val onLongClick: (crime: Crime) -> Boolean
     ) : RecyclerView.Adapter<CrimeListAdapter.ViewHolder>() {
+        private val TAG = javaClass.simpleName
+
+        var selectedCrimeId = -1
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = parent.inflate(R.layout.list_item_crime)
@@ -185,7 +196,9 @@ class CrimeListFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(crimes[position], onClick, onLongClick)
+            val selectedIndex: Int = crimes.find { it.id == selectedCrimeId }?.let { crimes.indexOf(it) } ?: -1
+
+            holder.bind(crimes[position], position == selectedIndex, onClick, onLongClick)
         }
 
         override fun getItemCount(): Int = crimes.size
@@ -202,9 +215,15 @@ class CrimeListFragment : Fragment() {
         class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
             fun bind(crime: Crime,
+                     isActive: Boolean,
                      onClick: (crime: Crime) -> Unit,
                      onLongClick: (crime: Crime) -> Boolean
             ) = with(itemView) {
+
+                if (isActive)
+                    setBackgroundColor(Color.parseColor("#C5CAE9"))
+                else
+                    setBackgroundColor(Color.TRANSPARENT)
 
                 val unknownName = resources.getString(android.R.string.unknownName)
                 listItemCrimeTitle.text = if (crime.title.isBlank()) unknownName else crime.title
